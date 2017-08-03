@@ -6,6 +6,7 @@ Markers: https://codeyarns.com/2013/10/24/markers-of-matplotlib/
 Axes documentation: https://matplotlib.org/api/axes_api.html
 Labels above bars: https://stackoverflow.com/questions/28931224/adding-value-labels-on-a-matplotlib-bar-chart
 Drawing an arrow: https://philbull.wordpress.com/2012/04/05/drawing-arrows-in-matplotlib/
+Arrow docs: https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.arrow.html
 Scatter plot with different markers: https://stackoverflow.com/questions/26490817/matplotlib-scatter-plot-with-different-markers-and-colors
 Stylesheet reference: http://www.futurile.net/2016/02/27/matplotlib-beautiful-plots-with-style/
 
@@ -19,7 +20,6 @@ import pandas as pd
 from pprint import pprint
 import pandas as pd
 import itertools
-from operator import add
 
 mark_dict = {
 ".":"point",
@@ -46,17 +46,11 @@ mark_dict = {
 "_":"hline"
 }
 
-ex_stacked_set = [
-        ([5.1,'#7ad3f0'], [[3,'PR'],[4,'CR']], 8.1),
-        ([7, '#7ad3f0'],[[3,'PD'],[6,'EOT']], 11.5),
-        ([3, '#7ad3f0'],[[1,'PR'],[2.9,'EOT']], 10)
-        ]
-
 ex_stack_base = [
-        [10,'b'],
-        [7, '#7ad3f0'],
-        [3, '#7ad3f0']
-        ]   
+                [10,'b'],
+                [7, '#7ad3f0'],
+                [3, '#7ad3f0']
+                ]   
 
 ex_stack_1 = [
             [2,'k'],
@@ -66,10 +60,10 @@ ex_stack_1 = [
 
 ex_stack = [ex_stack_base,ex_stack_1]
 ex_events = [
-        [[3,'PR'],[4,'CR']],
-        [[3,'PD'],[6,'EOT']],
-        [[1,'PR'],[2.9,'EOT']]
-        ]
+            [[3,'PR'],[4,'CR']],
+            [[3,'PD'],[6,'EOT']],
+            [[1,'PR'],[2.9,'EOT']]
+            ]
 
 def pull_from_spreadsheet():
     file_path = r'C:\Users\goyaln2\Desktop\ex_swimmer_data.xlsx'
@@ -79,13 +73,15 @@ def pull_from_spreadsheet():
     stks = []
     for key in list(df):
         stks.append(df[key])
+    labels = stks[0]
     stks = stks[1:]
-
+    
     stks[0] = [list(l) for l in zip(stks[0],['#7ad3f0']*len(stks[0]))]
     stks[1] = [list(l) for l in zip(stks[1],['#fc8238']*len(stks[1]))]
     stks[2] = [list(l) for l in zip(stks[2],['#78797a']*len(stks[2]))]
     evnts = list(itertools.repeat([[0,None]],len(stks[0])))
-    return(stks,evnts)
+    return(labels,stks,evnts)
+    ### Format of the stks variable has to be [[], [], []] (at least one nested list)
 
 def map_markers(event_type):
     '''
@@ -127,18 +123,14 @@ def unpack_swimmer_values(stacks, events):
             pt_bar_len += stacks[j][i][0] #access length in each stack for a pt
         length_of_each_stack.append(pt_bar_len)
 
-    
     stacks_zipped = zip(*stacks)
     stacks_zipped_with_events = zip(stacks_zipped,events)
     length_stacks_events = zip(length_of_each_stack,stacks_zipped_with_events)
     sorted_together = sorted(length_stacks_events)
-    
     length_of_each_stack,stacks_zipped_with_events = zip(*sorted_together)
     stacks_zipped,events = zip(*stacks_zipped_with_events)
     stacks = list(zip(*stacks_zipped))
     
-    pprint(stacks)
-
     #now have stacks and events sorted in ascending order, ready for plotting
     stack_length_lists = []
     stack_color_lists = []
@@ -167,10 +159,10 @@ def unpack_swimmer_values(stacks, events):
     return bar_locations, stack_length_lists, stack_color_lists, event_x, event_y, event_markers, event_colors
 
 if __name__ == '__main__':
-    stk,evnts = pull_from_spreadsheet()
+    labels,stk,evnts = pull_from_spreadsheet()
     bar_locations, stack_length_lists, stack_color_lists, event_x, event_y, event_markers, event_colors = unpack_swimmer_values(stk, evnts)    
     markersize = 5 #needs to be user variable so that as more/less bars added, it looks ok
-    bar_width = 1
+    bar_width = 0.75
     
     fig, ax = plt.subplots()
     plt.style.use('fivethirtyeight') #style of plot, ggplot also good
@@ -180,7 +172,9 @@ if __name__ == '__main__':
     for i in range(len(stack_length_lists)):
         ax.barh(bar_locations, stack_length_lists[i], bar_width, color = stack_color_lists[i], left = offset_list, edgecolor = 'k') #stack bars on top
         offset_list = [sum(x) for x in zip(offset_list, stack_length_lists[i])]
-            
+
+    #ax.set_yticklabels(labels)
+           
     for m,c,x,y in zip(event_markers,event_colors,event_x,event_y):
         plt.plot(x,y,marker=m,markersize=markersize,c=c)
 
@@ -188,14 +182,17 @@ if __name__ == '__main__':
     dose1 = mpatches.Patch(color = '#7ad3f0', label = '60mg')
     dose2 = mpatches.Patch(color = '#fc8238', label = '40mg')
     dose3 = mpatches.Patch(color = '#78797a', label = '20mg')
-    plt.legend(handles=[dose1,dose2,dose3])
+    #plt.legend(handles=[dose1,dose2,dose3])
+    
+    plt.axvline(x=365, linestyle = '--', alpha = 0.5, c = 'k',linewidth = 1)
+
     #drawing arrows
     #arrow(x,y,dx,dy,**kwargs)
-    # for i in range(len(data)):
-    #     plt.arrow(data[i],bar_locations[i],0.25,0,fc="k",ec="k",head_width=0.4,head_length=0.3)
+    # for i in range(len(offset_list)):
+    #     plt.arrow(offset_list[i],bar_locations[i],5,0,fc="k",ec="k",head_width=0.6,head_length=5,width = 0.4)
 
     plt.title('Duration of treatment by dose')
     plt.xlabel('Time from randomization (days)')
     plt.ylabel('Patients treated with Cabozantinib')
-    plt.grid()
+    #plt.grid()
     plt.show()
