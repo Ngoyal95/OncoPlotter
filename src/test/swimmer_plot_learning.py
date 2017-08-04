@@ -79,7 +79,7 @@ def pull_from_spreadsheet():
     stks[0] = [list(l) for l in zip(stks[0],['#7ad3f0']*len(stks[0]))]
     stks[1] = [list(l) for l in zip(stks[1],['#fc8238']*len(stks[1]))]
     stks[2] = [list(l) for l in zip(stks[2],['#78797a']*len(stks[2]))]
-    evnts = list(itertools.repeat([[0,None]],len(stks[0])))
+    evnts = list(itertools.repeat([[300,'CR']],len(stks[0])))
     return(labels,stks,evnts)
     ### Format of the stks variable has to be [[], [], []] (at least one nested list)
 
@@ -182,14 +182,14 @@ if __name__ == '__main__':
     dose1 = mpatches.Patch(color = '#7ad3f0', label = '60mg')
     dose2 = mpatches.Patch(color = '#fc8238', label = '40mg')
     dose3 = mpatches.Patch(color = '#78797a', label = '20mg')
-    #plt.legend(handles=[dose1,dose2,dose3])
+    plt.legend(handles=[dose1,dose2,dose3])
     
     plt.axvline(x=365, linestyle = '--', alpha = 0.5, c = 'k',linewidth = 1)
 
     #drawing arrows
     #arrow(x,y,dx,dy,**kwargs)
-    # for i in range(len(offset_list)):
-    #     plt.arrow(offset_list[i],bar_locations[i],5,0,fc="k",ec="k",head_width=0.6,head_length=5,width = 0.4)
+    for i in range(len(offset_list)):
+        plt.arrow(offset_list[i],bar_locations[i],5,0,fc="k",ec="k",head_width=0.6,head_length=5,width = 0.4)
 
     plt.title('Duration of treatment by dose')
     plt.xlabel('Time from randomization (days)')
