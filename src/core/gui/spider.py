@@ -34,7 +34,7 @@ class Ui_Spider(object):
     def retranslateUi(self, Spider):
         _translate = QtCore.QCoreApplication.translate
         Spider.setWindowTitle(_translate("Spider", "Dialog"))
-        self.plot_settings.setTitle(_translate("Spider", "Plot Settings"))
+        self.plot_settings.setTitle(_translate("Spider", "Spider Plot Settings"))
         self.bar_keys_and_event_markers.setTitle(_translate("Spider", "Bar Color Keys and Event Markers"))
         self.general_settings.setTitle(_translate("Spider", "General Settings"))
 

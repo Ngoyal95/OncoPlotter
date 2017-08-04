@@ -34,7 +34,7 @@ class Ui_Waterfall(object):
     def retranslateUi(self, Waterfall):
         _translate = QtCore.QCoreApplication.translate
         Waterfall.setWindowTitle(_translate("Waterfall", "Dialog"))
-        self.plot_settings.setTitle(_translate("Waterfall", "Plot Settings"))
+        self.plot_settings.setTitle(_translate("Waterfall", "Waterfall Plot Settings"))
         self.bar_keys_and_event_markers.setTitle(_translate("Waterfall", "Bar Color Keys and Event Markers"))
         self.general_settings.setTitle(_translate("Waterfall", "General Settings"))
 

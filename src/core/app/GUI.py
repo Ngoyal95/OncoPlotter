@@ -31,6 +31,8 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def setup_window(self):
         #Dialogs
+        
+        self.Waterfall_Widget = QWidget()
         self.Waterfall_Box = QVBoxLayout()
         self.Waterfall_Splitter = QSplitter(QtCore.Qt.Horizontal)
         self.Waterfall_Plot = Plotter(self)
@@ -38,7 +40,9 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Waterfall_Splitter.addWidget(self.Waterfall)
         self.Waterfall_Splitter.addWidget(self.Waterfall_Plot)
         self.Waterfall_Box.addWidget(self.Waterfall_Splitter)
+        self.Waterfall_Widget.setLayout(self.Waterfall_Box)
 
+        self.Spider_Widget = QWidget()
         self.Spider_Box = QVBoxLayout()
         self.Spider_Splitter = QSplitter(QtCore.Qt.Horizontal)
         self.Spider_Plot = Plotter(self)
@@ -46,7 +50,9 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Spider_Splitter.addWidget(self.Spider)
         self.Spider_Splitter.addWidget(self.Spider_Plot)
         self.Spider_Box.addWidget(self.Spider_Splitter)
+        self.Spider_Widget.setLayout(self.Spider_Box)
 
+        self.Swimmer_Widget = QWidget()
         self.Swimmer_Box = QVBoxLayout()
         self.Swimmer_Splitter = QSplitter(QtCore.Qt.Horizontal)
         self.Swimmer_Plot = Plotter(self)
@@ -54,6 +60,12 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Swimmer_Splitter.addWidget(self.Swimmer)
         self.Swimmer_Splitter.addWidget(self.Swimmer_Plot)
         self.Swimmer_Box.addWidget(self.Swimmer_Splitter)
+        self.Swimmer_Widget.setLayout(self.Swimmer_Box)
+
+        self.stackedWidget.addWidget(self.Waterfall_Widget) #0
+        self.stackedWidget.addWidget(self.Spider_Widget) #1
+        self.stackedWidget.addWidget(self.Swimmer_Widget) #2
+        self.stackedWidget.hide()
 
         #Icon
         self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\spider.png'))))
@@ -94,48 +106,16 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     #Launch functions
     def launch_waterfall(self):
-        try:
-            hasattr(self,'Waterfall')
-            self.Splitter1.addWidget(self.Waterfall)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
-            self.Waterfall_Plot.show()
-            self.Waterfall.show()
-        except Exception as e:
-            self.Waterfall = Waterfall(self)
-            self.Splitter1.addWidget(self.Waterfall)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
-    
+        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.show()
+
     def launch_spider(self):
-        try:
-            hasattr(self,'Spider')
-            self.Splitter1.addWidget(self.Spider)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
-            self.Spider_Plot.show()
-            self.Spider.show()
-        except Exception as e:
-            self.Spider = Spider(self)
-            self.Plotter = Plotter(self)
-            self.Splitter1.addWidget(self.Spider)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
+        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.show()
 
     def launch_swimmer(self):
-        try:
-            hasattr(self,'Swimmer')
-            self.Splitter1.addWidget(self.Swimmer)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
-            self.Swimmer.show()
-            self.Swimmer_Plot.show()
-        except Exception as e:
-            self.Swimmer = Swimmer(self)
-            self.Plotter = Plotter(self)
-            self.Splitter1.addWidget(self.Swimmer)
-            self.Splitter1.addWidget(self.Plotter)
-            self.display_vbox.addWidget(self.Splitter1)
+        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.show()
 
 def main():
     myappid = u'OncoPlotter_V1.0'

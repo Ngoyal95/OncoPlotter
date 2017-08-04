@@ -34,7 +34,7 @@ class Ui_Swimmer(object):
     def retranslateUi(self, Swimmer):
         _translate = QtCore.QCoreApplication.translate
         Swimmer.setWindowTitle(_translate("Swimmer", "Dialog"))
-        self.plot_settings.setTitle(_translate("Swimmer", "Plot Settings"))
+        self.plot_settings.setTitle(_translate("Swimmer", "Swimmer Pllot Settings"))
         self.bar_keys_and_event_markers.setTitle(_translate("Swimmer", "Bar Color Keys and Event Markers"))
         self.general_settings.setTitle(_translate("Swimmer", "General Settings"))
 
