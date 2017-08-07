@@ -44,9 +44,28 @@ class WaterfallPlotter(QWidget):
         self.setLayout(layout)
     
     def plot(self):
+        '''
+        Plot waterfall data
+        '''
         self.n = len(waterfall_data[0])
         self.rect_locations = np.arange(self.n)
-    
-    def auto_label_responses(self,ax,data):
-        
+        ax = self.figure.add_subplot(111)
+        ax.hold(False) #rewrite the plot when plot() called
+        self.rects = ax.bar(self.rect_locations,self.waterfall_data[1])
+        self.auto_label_responses(ax,self.waterfall_data)
+        self.canvas.draw()
+            
+    def auto_label_responses(self,ax,rects,waterfall_data):
+        i = 0
+        for rect in rects:
+            height = rect.get_height()
+            if height >= 0:
+                valign = 'bottom'
+            else:
+                valign = 'top
+                
+            ax.text(rect.get_x() + rect.get_width()/2., height,
+                    '%s' % waterfall_data[2][i], ha='center', va=valign)
+            i+=1
+            
         
