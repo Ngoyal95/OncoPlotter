@@ -95,6 +95,7 @@ def map_markers(event_type):
                 'EOT': ['1','#000000'],
                 None: ['','None']
                 }
+                
     std_bar_keys_dict = {}
 
     e_m = []

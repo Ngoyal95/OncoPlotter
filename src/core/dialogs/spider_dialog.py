@@ -12,3 +12,6 @@ class Spider(QWidget, spider.Ui_Spider):
         #Override closeEvent so that we hide the window rather than exit so we don't lose data
         event.ignore()
         self.hide()
+
+class SpiderPlotter(QWidget):
+    pass

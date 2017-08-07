@@ -12,3 +12,6 @@ class Swimmer(QWidget, swimmmer.Ui_Swimmer):
         #Override closeEvent so that we hide the window rather than exit so we don't lose data
         event.ignore()
         self.hide()
+
+class SwimmerPlotter(QWidget):
+    pass

@@ -1,4 +1,3 @@
-import sys
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QWidget
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

@@ -1,21 +1,18 @@
 #! python3
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QTextEdit, QWidget, QSplitter, QFrame, QPushButton, QSizePolicy)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QTextEdit, QWidget, QSplitter, QFrame, QPushButton, QSizePolicy, QFileDialog)
 from PyQt5 import QtCore, QtGui
-
-#plotting
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
 
 #GUI 
 import core.gui.mainwindow as mainwindow
 
 #Dialogs
-from core.dialogs.swimmer_dialog import Swimmer
-from core.dialogs.spider_dialog import Spider
-from core.dialogs.waterfall_dialog import Waterfall
-from core.dialogs.plot_dialog import Plotter
+from core.dialogs.swimmer_dialog import Swimmer, SwimmerPlotter
+from core.dialogs.spider_dialog import Spider, SpiderPlotter
+from core.dialogs.waterfall_dialog import Waterfall, WaterfallPlotter
+
+#Support functions
+from core.app.support_functions import import_plot_data
 
 import os
 import sys
@@ -24,18 +21,21 @@ import ctypes
 image_dir = os.path.dirname(os.path.abspath('../OncoPlot'))
 
 class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
+
+    waterfall_data_signal = QtCore.pyqtSignal(list)
+
     def __init__(self,parent=None):
         QMainWindow.__init__(self,parent)
         self.setupUi(self)
         self.setup_window()
 
     def setup_window(self):
+
         #Dialogs
-        
         self.Waterfall_Widget = QWidget()
         self.Waterfall_Box = QVBoxLayout()
         self.Waterfall_Splitter = QSplitter(QtCore.Qt.Horizontal)
-        self.Waterfall_Plot = Plotter(self)
+        self.Waterfall_Plot = WaterfallPlotter(self)
         self.Waterfall = Waterfall(self)
         self.Waterfall_Splitter.addWidget(self.Waterfall)
         self.Waterfall_Splitter.addWidget(self.Waterfall_Plot)
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Spider_Widget = QWidget()
         self.Spider_Box = QVBoxLayout()
         self.Spider_Splitter = QSplitter(QtCore.Qt.Horizontal)
-        self.Spider_Plot = Plotter(self)
+        self.Spider_Plot = SpiderPlotter(self)
         self.Spider = Spider(self)
         self.Spider_Splitter.addWidget(self.Spider)
         self.Spider_Splitter.addWidget(self.Spider_Plot)
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Swimmer_Widget = QWidget()
         self.Swimmer_Box = QVBoxLayout()
         self.Swimmer_Splitter = QSplitter(QtCore.Qt.Horizontal)
-        self.Swimmer_Plot = Plotter(self)
+        self.Swimmer_Plot = SwimmerPlotter(self)
         self.Swimmer = Swimmer(self)
         self.Swimmer_Splitter.addWidget(self.Swimmer)
         self.Swimmer_Splitter.addWidget(self.Swimmer_Plot)
@@ -80,8 +80,8 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.btn_data_import.setIconSize(QtCore.QSize(90,90))
         self.btn_discard_dataset.setIconSize(QtCore.QSize(90,90))
 
-        self.btn_data_import.setFixedSize(190, 100)
-        self.btn_discard_dataset.setFixedSize(190, 100)
+        self.btn_data_import.setFixedSize(180, 100)
+        self.btn_discard_dataset.setFixedSize(180, 100)
 
         self.btn_waterfall.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.btn_spider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -103,6 +103,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.btn_waterfall.clicked.connect(self.launch_waterfall)
         self.btn_spider.clicked.connect(self.launch_spider)
         self.btn_swimmer.clicked.connect(self.launch_swimmer)
+        self.btn_data_import.clicked.connect(self.import_data)
 
     #Launch functions
     def launch_waterfall(self):
@@ -116,6 +117,16 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def launch_swimmer(self):
         self.stackedWidget.setCurrentIndex(2)
         self.stackedWidget.show()
+
+    def import_data(self):
+        self.file_path = QFileDialog.getOpenFileName(self,"Select Data Template", "C:\\")[0]
+        if self.file_path == '':
+            pass
+        else:
+            self.waterfall_data = import_plot_data(self.file_path)
+            self.waterfall_data_signal.emit(self.waterfall_data)
+            self.btn_waterfall.setEnabled(True)
+
 
 def main():
     myappid = u'OncoPlotter_V1.0'
