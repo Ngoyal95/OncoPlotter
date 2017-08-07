@@ -13,6 +13,8 @@ from PyQt5 import QtCore, QtGui
 import core.gui.waterfall as waterfall
 import numpy as np
 
+from pprint import pprint
+
 class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
     general_settings_signal = QtCore.pyqtSignal(list) #send list of plotting params
@@ -21,28 +23,32 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         super(Waterfall,self).__init__(parent)
         self.setupUi(self)
         
-        #connect signals
-        parent.waterfall_data_signal.connect(self.get_data)
-
         #Button functions
-        self.apply_general_settings.clicked.connect(self.general_settings)
+        self.btn_apply_general_settings.clicked.connect(self.send_settings)
 
     def closeEvent(self,event):
         #Override closeEvent so that we hide the window rather than exit so we don't lose data
         event.ignore()
         self.hide()
         
-    def get_data(self,signal):
+    def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal
         
-    def general_settings(self):
-        pass
+    def send_settings(self,signal):
+        self.list_general_settings = [
+                                        self.plot_title.text(),
+                                        self.x_label.text(),
+                                        self.y_label.text(),
+                                        self.twenty_percent_line.isChecked(),
+                                        self.thirty_percent_line.isChecked(),
+                                        self.zero_percent_line.isChecked(),
+                                        self.display_responses_as_text.isChecked()
+                                    ]
+        self.general_settings_signal.emit(self.list_general_settings)
 
 class WaterfallPlotter(QWidget):
     def __init__(self,parent=None):
         super(WaterfallPlotter,self).__init__(parent)
-
-        parent.waterfall_data_signal.connect(self.get_data)
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
@@ -58,24 +64,57 @@ class WaterfallPlotter(QWidget):
         layout.addWidget(self.btn_plot)
         self.setLayout(layout)
     
-    def get_data(self,signal):
+    def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal
+        self.btn_plot.setEnabled(True)
 
+    def on_general_settings_signal(self,signal):
+        try:
+            hasattr(self,'ax')
+            self.ax.set_title(signal[0])
+            self.ax.set_xlabel(signal[1])
+            self.ax.set_ylabel(signal[2])
+            self.canvas.draw()
+        except Exception as e:
+            print(e)
+            
     def default_plot(self):
         '''
         Plot waterfall data
         '''
+        self.figure.clear()
         self.rect_locations = np.arange(len(self.waterfall_data[0]))
-        ax = self.figure.add_subplot(111)
-        ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0)
-        ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, lw=2.0)
-        ax.axhline(y=0, c='k', alpha=1, lw=2.0)
-        ax.grid(color = 'k', axis = 'y', alpha=0.25)
-        self.rects = ax.bar(self.rect_locations,self.waterfall_data[1])
-        self.auto_label_responses(ax, self.rects, self.waterfall_data)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0, label='twenty_percent')
+        self.ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, lw=2.0, label='thirty_percent')
+        self.ax.axhline(y=0, c='k', alpha=1, lw=2.0, label='zero_percent')
+        self.ax.grid(color = 'k', axis = 'y', alpha=0.25)
+        self.rects = self.ax.bar(self.rect_locations,self.waterfall_data[1])
+        self.auto_label_responses(self.ax, self.rects, self.waterfall_data)
+        self.plot_table()
         self.canvas.draw()
-        ax.hold(False) #rewrite the plot when plot() called
-        
+        self.ax.hold(False) #rewrite the plot when plot() called
+            
+    def plot_table(self):
+        rows = ['%s' % x for x in ('Baseline ECOG','Baseline metastasis', 'Baseline albumin','Baseline hemoglobin')]
+        columns = self.waterfall_data[0] #patient numbers
+        cell_text = []
+        for row in range(len(rows)):
+            cell_text_temp = []
+            for col in columns:
+                cell_text_temp.append('x')
+            cell_text.append(cell_text_temp)
+        the_table = plt.table(cellText=cell_text, rowLabels=rows, colLabels=columns, loc='bottom', cellLoc='center')
+        plt.subplots_adjust(bottom=0.15,left=0.5)
+        self.ax.set_xlim(-0.5,len(columns)-0.5)
+        plt.tick_params(
+                        axis='x',          # changes apply to the x-axis
+                        which='both',      # both major and minor ticks are affected
+                        bottom='off',      # ticks along the bottom edge are off
+                        top='off',         # ticks along the top edge are off
+                        labelbottom='off'
+                        ) # labels along the bottom edge are off
+    
     def update_plot(self):
         '''
         TODO

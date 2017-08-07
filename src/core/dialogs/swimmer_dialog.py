@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QApplication, QDialog, QWidget)
+from PyQt5.QtWidgets import (QWidget)
 from PyQt5 import QtCore, QtGui
 
 import core.gui.swimmer as swimmmer

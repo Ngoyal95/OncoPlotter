@@ -190,7 +190,7 @@ if __name__ == '__main__':
     #drawing arrows
     #arrow(x,y,dx,dy,**kwargs)
     for i in range(len(offset_list)):
-        plt.arrow(offset_list[i],bar_locations[i],5,0,fc="k",ec="k",head_width=0.6,head_length=5,width = 0.4)
+        plt.arrow(offset_list[i]+0.05,bar_locations[i],5,0,fc="k",ec="k",head_width=0.6,head_length=5,width = 0.4)
 
     plt.title('Duration of treatment by dose')
     plt.xlabel('Time from randomization (days)')

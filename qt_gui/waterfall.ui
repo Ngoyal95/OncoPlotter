@@ -191,7 +191,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="display_response_as_text">
+            <widget class="QCheckBox" name="display_responses_as_text">
              <property name="text">
               <string/>
              </property>
@@ -216,7 +216,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="btn_apply_general_settings">
            <property name="text">
             <string>Apply General Settings</string>
            </property>

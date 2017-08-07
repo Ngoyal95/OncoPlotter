@@ -30,13 +30,12 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.setup_window()
 
     def setup_window(self):
-
         #Dialogs
+        self.Waterfall_Plot = WaterfallPlotter(self)
+        self.Waterfall = Waterfall(self)
         self.Waterfall_Widget = QWidget()
         self.Waterfall_Box = QVBoxLayout()
         self.Waterfall_Splitter = QSplitter(QtCore.Qt.Horizontal)
-        self.Waterfall_Plot = WaterfallPlotter(self)
-        self.Waterfall = Waterfall(self)
         self.Waterfall_Splitter.addWidget(self.Waterfall)
         self.Waterfall_Splitter.addWidget(self.Waterfall_Plot)
         self.Waterfall_Box.addWidget(self.Waterfall_Splitter)
@@ -104,6 +103,11 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.btn_spider.clicked.connect(self.launch_spider)
         self.btn_swimmer.clicked.connect(self.launch_swimmer)
         self.btn_data_import.clicked.connect(self.import_data)
+
+        #Signal interconnections
+        self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
+        self.waterfall_data_signal.connect(self.Waterfall_Plot.on_waterfall_data_signal)
+        self.Waterfall.general_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal)
 
     #Launch functions
     def launch_waterfall(self):
