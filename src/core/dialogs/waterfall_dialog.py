@@ -2,7 +2,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 import matplotlib.pyplot as plt
 
-from PyQt5.QtWidgets import (QApplication, QDialog, QWidget)
+from PyQt5.QtWidgets import (QApplication, QDialog, QWidget, QPushButton, )
 from PyQt5 import QtCore, QtGui
 
 import core.gui.waterfall as waterfall
@@ -43,7 +43,7 @@ class WaterfallPlotter(QWidget):
         layout.addWidget(self.btn_plot)
         self.setLayout(layout)
     
-    def plot(self):
+    def default_plot(self):
         '''
         Plot waterfall data
         '''
@@ -51,11 +51,21 @@ class WaterfallPlotter(QWidget):
         self.rect_locations = np.arange(self.n)
         ax = self.figure.add_subplot(111)
         ax.hold(False) #rewrite the plot when plot() called
+        ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, width = 1)
+        ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, width = 1)
+        ax.axhline(y=0, c='k', alpha=1, width = 1)
         self.rects = ax.bar(self.rect_locations,self.waterfall_data[1])
-        self.auto_label_responses(ax,self.waterfall_data)
+        self.auto_label_responses(ax, self.rects, self.waterfall_data)
         self.canvas.draw()
-            
-    def auto_label_responses(self,ax,rects,waterfall_data):
+        
+    def update_plot(self):
+        '''
+        TODO
+        '''
+        pass
+                    
+    def auto_label_responses(self, ax, rects, waterfall_data):
+        '''Add labels above/below bars'''
         i = 0
         for rect in rects:
             height = rect.get_height()
