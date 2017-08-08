@@ -1,6 +1,6 @@
 #! python3
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QTextEdit, QWidget, QSplitter, QFrame, QPushButton, QSizePolicy, QFileDialog)
+from PyQt5.QtWidgets import (QAction, QApplication, QMainWindow, QVBoxLayout, QTextEdit, QWidget, QSplitter, QFrame, QPushButton, QSizePolicy, QFileDialog)
 from PyQt5 import QtCore, QtGui
 
 #GUI 
@@ -103,6 +103,38 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.btn_spider.clicked.connect(self.launch_spider)
         self.btn_swimmer.clicked.connect(self.launch_swimmer)
         self.btn_data_import.clicked.connect(self.import_data)
+
+
+        #Set up toolBar
+        self.toolBar.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+
+        importAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\Download.png')), 'Import date template', self)
+        importAction.triggered.connect(self.import_data)
+        importAction.setIconText("Import")
+        self.toolBar.addAction(importAction)
+        self.toolBar.addSeparator()
+
+        dumpAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\Rubbish.png')), 'Import date template', self)
+        #dumpAction.triggered.connect(self.dump_data)
+        dumpAction.setIconText("Dump data")
+        self.toolBar.addAction(dumpAction)
+        self.toolBar.addSeparator()
+
+        waterfallAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\waterfall.png')), 'Waterfall plot', self)
+        waterfallAction.triggered.connect(self.launch_waterfall)
+        waterfallAction.setIconText("Waterfall")
+        self.toolBar.addAction(waterfallAction)
+        
+        spiderAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\spider.png')), 'Spider plot', self)
+        spiderAction.triggered.connect(self.launch_spider)
+        spiderAction.setIconText("Spider")
+        self.toolBar.addAction(spiderAction)
+
+        swimmerAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\swimmer_stack.png')), 'Swimmer plot', self)
+        swimmerAction.triggered.connect(self.launch_spider)
+        swimmerAction.setIconText("Swimmer")
+        self.toolBar.addAction(swimmerAction)
+        self.toolBar.addSeparator()
 
         #Signal interconnections
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
