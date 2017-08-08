@@ -66,45 +66,6 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.stackedWidget.addWidget(self.Swimmer_Widget) #2
         self.stackedWidget.hide()
 
-        #Icon
-        self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\spider.png'))))
-
-        #Button appearances
-        self.btn_data_import.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.btn_discard_dataset.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.btn_data_import.setIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\Download.png'))))
-        self.btn_discard_dataset.setIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\Rubbish.png'))))
-
-        self.btn_data_import.setIconSize(QtCore.QSize(90,90))
-        self.btn_discard_dataset.setIconSize(QtCore.QSize(90,90))
-
-        self.btn_data_import.setFixedSize(180, 100)
-        self.btn_discard_dataset.setFixedSize(180, 100)
-
-        self.btn_waterfall.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.btn_spider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.btn_swimmer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.btn_waterfall.setIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\waterfall.png'))))
-        self.btn_spider.setIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\spider.png'))))
-        self.btn_swimmer.setIcon(QtGui.QIcon(QtGui.QPixmap(os.path.join(image_dir,'images\swimmer_stack.png'))))
-
-        self.btn_waterfall.setIconSize(QtCore.QSize(370,250))
-        self.btn_spider.setIconSize(QtCore.QSize(380,250))
-        self.btn_swimmer.setIconSize(QtCore.QSize(380,250))
-
-        self.btn_waterfall.setFixedSize(400,250)
-        self.btn_spider.setFixedSize(400,250)
-        self.btn_swimmer.setFixedSize(400,250)
-
-        #Button connections
-        self.btn_waterfall.clicked.connect(self.launch_waterfall)
-        self.btn_spider.clicked.connect(self.launch_spider)
-        self.btn_swimmer.clicked.connect(self.launch_swimmer)
-        self.btn_data_import.clicked.connect(self.import_data)
-
-
         #Set up toolBar
         self.toolBar.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
 
@@ -161,8 +122,6 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         else:
             self.waterfall_data = import_plot_data(self.file_path)
             self.waterfall_data_signal.emit(self.waterfall_data)
-            self.btn_waterfall.setEnabled(True)
-
 
 def main():
     myappid = u'OncoPlotter_V1.0'
