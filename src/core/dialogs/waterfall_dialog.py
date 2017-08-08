@@ -7,7 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 
-from PyQt5.QtWidgets import (QApplication, QDialog, QWidget, QPushButton, QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QDialog, QWidget, QPushButton, QVBoxLayout, QTreeWidget, QTreeWidgetItem)
 from PyQt5 import QtCore, QtGui
 
 import core.gui.waterfall as waterfall
@@ -25,6 +25,8 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         
         #Button functions
         self.btn_apply_general_settings.clicked.connect(self.send_settings)
+        self.patient_tree = self.create_patient_tree()
+        self.data_viewer_container.addWidget(self.patient_tree)
 
     def closeEvent(self,event):
         #Override closeEvent so that we hide the window rather than exit so we don't lose data
@@ -45,6 +47,28 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
                                         self.display_responses_as_text.isChecked()
                                     ]
         self.general_settings_signal.emit(self.list_general_settings)
+
+    def create_patient_tree(self):
+            '''
+            Create QTreeWidget populated with a patient's data for the DataEntry dialog.
+            Assumes that self.temp_patient is the patient of interest and that the variable belongs to the dialog.
+            '''
+            self.tree = QTreeWidget()
+            self.root = self.tree.invisibleRootItem()
+            self.headers = [
+                            'Patient #',
+                            'Best response %',
+                            'Overall response',
+                            'Cancer type'
+                            ]
+            self.headers_item = QTreeWidgetItem(self.headers)
+            self.tree.setColumnCount(len(self.headers))
+            self.tree.setHeaderItem(self.headers_item)
+            self.root.setExpanded(True)
+            #self.addItems()
+            #self.tree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+            #self.tree.header().setStretchLastSection(False)
+            return self.tree
 
 class WaterfallPlotter(QWidget):
     def __init__(self,parent=None):
