@@ -19,9 +19,7 @@ def import_plot_data(file_path):
     df_swimmer_data = xl.parse('Swimmer_data')
     
     waterfall_data = parse_df_waterfall(df_waterfall_data)
-    #spider_data = parse_df_spider(df_spider_data)
-    #swimmer_data = parse_df_swimmer(df_swimmer_data)
-
+    
     return waterfall_data
 
 def parse_df_swimmer(df):

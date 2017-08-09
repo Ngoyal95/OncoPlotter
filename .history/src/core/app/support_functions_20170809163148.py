@@ -58,10 +58,10 @@ def parse_df_waterfall(df_waterfall_data):
         waterfall_data[header] = df_waterfall_data[header]
     return waterfall_data
 
-    # waterfall_data = []
-    # for key in list(df_waterfall_data):
-    #     waterfall_data.append(df_waterfall_data[key])
-    # return waterfall_data
+    waterfall_data = []
+    for key in list(df_waterfall_data):
+        waterfall_data.append(df_waterfall_data[key])
+    return waterfall_data
 
 def parse_df_spider(df_spider_data):
     spider_headers = list(df_spider_data)

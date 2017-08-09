@@ -18,9 +18,22 @@ def import_plot_data(file_path):
     df_spider_data = xl.parse('Spider_data')
     df_swimmer_data = xl.parse('Swimmer_data')
     
+    #Waterfall
+
+    
+    #Spider
+    spider_headers = list(df_spider_data)
+    spider_data = {}
+    for header in spider_headers:
+        spider_data[header] = df_spider_data[header]
+    
+    #Swimmer
+    swimmer_headers = list(df_swimmer_data)
+    swimmer_data = {}
+    for header in swimmer_headers:
+        swimmer_data[header] = df_swimmer_data[header]
+
     waterfall_data = parse_df_waterfall(df_waterfall_data)
-    #spider_data = parse_df_spider(df_spider_data)
-    #swimmer_data = parse_df_swimmer(df_swimmer_data)
 
     return waterfall_data
 
@@ -32,11 +45,6 @@ def parse_df_swimmer(df):
     #Sort df_swimmer_data by their totals
     numcols = len(list(df)) #number of keys
 
-
-    # swimmer_headers = list(df_swimmer_data)
-    # swimmer_data = {}
-    # for header in swimmer_headers:
-    #     swimmer_data[header] = df_swimmer_data[header]
 
     swimmer_data = []
     for key in list(df):
@@ -62,9 +70,3 @@ def parse_df_waterfall(df_waterfall_data):
     # for key in list(df_waterfall_data):
     #     waterfall_data.append(df_waterfall_data[key])
     # return waterfall_data
-
-def parse_df_spider(df_spider_data):
-    spider_headers = list(df_spider_data)
-    spider_data = {}
-    for header in spider_headers:
-        spider_data[header] = df_spider_data[header]

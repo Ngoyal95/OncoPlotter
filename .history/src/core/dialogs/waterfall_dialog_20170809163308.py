@@ -121,7 +121,7 @@ class WaterfallPlotter(QWidget):
             
     def plot_table(self):
         rows = ['%s' % x for x in ('Baseline ECOG','Baseline metastasis', 'Baseline albumin','Baseline hemoglobin')]
-        columns = self.waterfall_data['Patient number'] #patient numbers
+        columns = self.waterfall_data[0] #patient numbers
         cell_text = []
         for row in range(len(rows)):
             cell_text_temp = []
@@ -156,5 +156,5 @@ class WaterfallPlotter(QWidget):
                 valign = 'top'
                 
             ax.text(rect.get_x() + rect.get_width()/2., height,
-                    '%s' % waterfall_data['Overall response'][i], ha='center', va=valign)
+                    '%s' % waterfall_data[][i], ha='center', va=valign)
             i+=1

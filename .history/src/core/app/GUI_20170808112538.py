@@ -22,7 +22,7 @@ image_dir = os.path.dirname(os.path.abspath('../OncoPlot'))
 
 class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
-    waterfall_data_signal = QtCore.pyqtSignal(dict)
+    waterfall_data_signal = QtCore.pyqtSignal(list)
 
     def __init__(self,parent=None):
         QMainWindow.__init__(self,parent)

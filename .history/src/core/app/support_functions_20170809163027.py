@@ -52,16 +52,16 @@ def parse_df_waterfall(df_waterfall_data):
     #all columns after these first 4 are custom (related to a table shown below the plot, col headers are the table row labels)
     df_waterfall_data = df_waterfall_data.sort_values('Best response percent change', ascending = False)
     
-    waterfall_headers = list(df_waterfall_data) #use to create seperate lists stored in a dict, keys are names of col headers
-    waterfall_data = {}
-    for header in waterfall_headers:
-        waterfall_data[header] = df_waterfall_data[header]
-    return waterfall_data
-
-    # waterfall_data = []
-    # for key in list(df_waterfall_data):
-    #     waterfall_data.append(df_waterfall_data[key])
+    # waterfall_headers = list(df_waterfall_data) #use to create seperate lists stored in a dict, keys are names of col headers
+    # waterfall_data = {}
+    # for header in waterfall_headers:
+    #     waterfall_data[header] = df_waterfall_data[header]
     # return waterfall_data
+
+    waterfall_data = []
+    for key in list(df_waterfall_data):
+        waterfall_data.append(df_waterfall_data[key])
+    return waterfall_data
 
 def parse_df_spider(df_spider_data):
     spider_headers = list(df_spider_data)

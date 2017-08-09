@@ -121,7 +121,7 @@ class WaterfallPlotter(QWidget):
             
     def plot_table(self):
         rows = ['%s' % x for x in ('Baseline ECOG','Baseline metastasis', 'Baseline albumin','Baseline hemoglobin')]
-        columns = self.waterfall_data['Patient number'] #patient numbers
+        columns = self.waterfall_data[0] #patient numbers
         cell_text = []
         for row in range(len(rows)):
             cell_text_temp = []

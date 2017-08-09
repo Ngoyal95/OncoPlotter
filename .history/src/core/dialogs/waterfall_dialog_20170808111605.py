@@ -53,6 +53,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             Create QTreeWidget populated with a patient's data for the DataEntry dialog.
             Assumes that self.temp_patient is the patient of interest and that the variable belongs to the dialog.
             '''
+            
             self.tree = QTreeWidget()
             self.root = self.tree.invisibleRootItem()
             self.headers = [
@@ -107,13 +108,13 @@ class WaterfallPlotter(QWidget):
         Plot waterfall data
         '''
         self.figure.clear()
-        self.rect_locations = np.arange(len(self.waterfall_data['Best response percent change']))
+        self.rect_locations = np.arange(len(self.waterfall_data[0]))
         self.ax = self.figure.add_subplot(111)
         self.ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0, label='twenty_percent')
         self.ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, lw=2.0, label='thirty_percent')
         self.ax.axhline(y=0, c='k', alpha=1, lw=2.0, label='zero_percent')
         self.ax.grid(color = 'k', axis = 'y', alpha=0.25)
-        self.rects = self.ax.bar(self.rect_locations,self.waterfall_data['Best response percent change'])
+        self.rects = self.ax.bar(self.rect_locations,self.waterfall_data[1])
         self.auto_label_responses(self.ax, self.rects, self.waterfall_data)
         self.plot_table()
         self.canvas.draw()
@@ -121,7 +122,7 @@ class WaterfallPlotter(QWidget):
             
     def plot_table(self):
         rows = ['%s' % x for x in ('Baseline ECOG','Baseline metastasis', 'Baseline albumin','Baseline hemoglobin')]
-        columns = self.waterfall_data['Patient number'] #patient numbers
+        columns = self.waterfall_data[0] #patient numbers
         cell_text = []
         for row in range(len(rows)):
             cell_text_temp = []
@@ -156,5 +157,5 @@ class WaterfallPlotter(QWidget):
                 valign = 'top'
                 
             ax.text(rect.get_x() + rect.get_width()/2., height,
-                    '%s' % waterfall_data['Overall response'][i], ha='center', va=valign)
+                    '%s' % waterfall_data[2][i], ha='center', va=valign)
             i+=1

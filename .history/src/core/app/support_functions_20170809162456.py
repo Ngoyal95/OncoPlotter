@@ -18,9 +18,22 @@ def import_plot_data(file_path):
     df_spider_data = xl.parse('Spider_data')
     df_swimmer_data = xl.parse('Swimmer_data')
     
+    #Waterfall
+
+    
+    #Spider
+    spider_headers = list(df_spider_data)
+    spider_data = {}
+    for header in spider_headers:
+        spider_data[header] = df_spider_data[header]
+    
+    #Swimmer
+    swimmer_headers = list(df_swimmer_data)
+    swimmer_data = {}
+    for header in swimmer_headers:
+        swimmer_data[header] = df_swimmer_data[header]
+
     waterfall_data = parse_df_waterfall(df_waterfall_data)
-    #spider_data = parse_df_spider(df_spider_data)
-    #swimmer_data = parse_df_swimmer(df_swimmer_data)
 
     return waterfall_data
 
@@ -33,11 +46,6 @@ def parse_df_swimmer(df):
     numcols = len(list(df)) #number of keys
 
 
-    # swimmer_headers = list(df_swimmer_data)
-    # swimmer_data = {}
-    # for header in swimmer_headers:
-    #     swimmer_data[header] = df_swimmer_data[header]
-
     swimmer_data = []
     for key in list(df):
         swimmer_data.append(df[key])
@@ -48,10 +56,9 @@ def parse_df_waterfall(df_waterfall_data):
     '''
     Prepare waterfall plot data for plotting
     '''
-    #standard columns (always present first 4 columns & in this order) are: 'Patient number', 'Best response percent change', 'Patient response', 'Cancer'
-    #all columns after these first 4 are custom (related to a table shown below the plot, col headers are the table row labels)
     df_waterfall_data = df_waterfall_data.sort_values('Best response percent change', ascending = False)
     
+
     waterfall_headers = list(df_waterfall_data) #use to create seperate lists stored in a dict, keys are names of col headers
     waterfall_data = {}
     for header in waterfall_headers:
@@ -62,9 +69,3 @@ def parse_df_waterfall(df_waterfall_data):
     # for key in list(df_waterfall_data):
     #     waterfall_data.append(df_waterfall_data[key])
     # return waterfall_data
-
-def parse_df_spider(df_spider_data):
-    spider_headers = list(df_spider_data)
-    spider_data = {}
-    for header in spider_headers:
-        spider_data[header] = df_spider_data[header]

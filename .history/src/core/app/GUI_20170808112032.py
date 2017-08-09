@@ -22,7 +22,7 @@ image_dir = os.path.dirname(os.path.abspath('../OncoPlot'))
 
 class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
-    waterfall_data_signal = QtCore.pyqtSignal(dict)
+    waterfall_data_signal = QtCore.pyqtSignal(list)
 
     def __init__(self,parent=None):
         QMainWindow.__init__(self,parent)
@@ -81,23 +81,20 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addAction(dumpAction)
         self.toolBar.addSeparator()
 
-        self.waterfallAction = QAction(QtGui.QIcon(os.path.join(image_dir, r'images\waterfall.png')), 'Waterfall plot', self)
-        self.waterfallAction.triggered.connect(self.launch_waterfall)
-        self.waterfallAction.setIconText("Waterfall")
-        self.waterfallAction.setEnabled(False)
-        self.toolBar.addAction(self.waterfallAction)
+        waterfallAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\waterfall.png')), 'Waterfall plot', self)
+        waterfallAction.triggered.connect(self.launch_waterfall)
+        waterfallAction.setIconText("Waterfall")
+        self.toolBar.addAction(waterfallAction)
         
-        self.spiderAction = QAction(QtGui.QIcon(os.path.join(image_dir, r'images\spider.png')), 'Spider plot', self)
-        self.spiderAction.triggered.connect(self.launch_spider)
-        self.spiderAction.setIconText("Spider")
-        self.spiderAction.setEnabled(False)
-        self.toolBar.addAction(self.spiderAction)
+        spiderAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\spider.png')), 'Spider plot', self)
+        spiderAction.triggered.connect(self.launch_spider)
+        spiderAction.setIconText("Spider")
+        self.toolBar.addAction(spiderAction)
 
-        self.swimmerAction = QAction(QtGui.QIcon(os.path.join(image_dir, r'images\swimmer_stack.png')), 'Swimmer plot', self)
-        self.swimmerAction.triggered.connect(self.launch_spider)
-        self.swimmerAction.setIconText("Swimmer")
-        self.swimmerAction.setEnabled(False)
-        self.toolBar.addAction(self.swimmerAction)
+        swimmerAction = QAction(QtGui.QIcon(os.path.join(image_dir,'images\swimmer_stack.png')), 'Swimmer plot', self)
+        swimmerAction.triggered.connect(self.launch_spider)
+        swimmerAction.setIconText("Swimmer")
+        self.toolBar.addAction(swimmerAction)
         self.toolBar.addSeparator()
 
         #Signal interconnections
@@ -125,9 +122,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         else:
             self.waterfall_data = import_plot_data(self.file_path)
             self.waterfall_data_signal.emit(self.waterfall_data)
-        self.waterfallAction.setEnabled(True)
-        self.spiderAction.setEnabled(True)
-        self.swimmerAction.setEnabled(True)
+        waterfallAction.setEnabled(True)
 
 def main():
     myappid = u'OncoPlotter_V1.0'
