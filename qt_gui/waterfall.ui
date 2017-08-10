@@ -95,9 +95,12 @@
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_3">
+             <spacer name="horizontalSpacer_5">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Minimum</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -107,13 +110,6 @@
               </property>
              </spacer>
             </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="thirty_percent_line_layout">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetNoConstraint</enum>
-            </property>
             <item>
              <widget class="QLabel" name="label_5">
               <property name="text">
@@ -132,9 +128,12 @@
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer">
+             <spacer name="horizontalSpacer_6">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Minimum</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -144,10 +143,6 @@
               </property>
              </spacer>
             </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="zero_percent_line_layout">
             <item>
              <widget class="QLabel" name="label_6">
               <property name="text">
@@ -166,7 +161,7 @@
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_2">
+             <spacer name="horizontalSpacer_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -201,6 +196,37 @@
             </item>
             <item>
              <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Include table below plot (no x-axis label will show):</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="include_table">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
