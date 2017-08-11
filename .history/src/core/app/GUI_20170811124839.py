@@ -96,7 +96,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addAction(self.spiderAction)
 
         self.swimmerAction = QAction(QtGui.QIcon(os.path.join(image_dir, r'images\swimmer_stack.png')), 'Swimmer plot', self)
-        self.swimmerAction.triggered.connect(self.launch_swimmer)
+        self.swimmerAction.triggered.connect(self.launch_spider)
         self.swimmerAction.setIconText("Swimmer")
         self.swimmerAction.setEnabled(False)
         self.toolBar.addAction(self.swimmerAction)

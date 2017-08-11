@@ -34,6 +34,8 @@ class SwimmerPlotter(QWidget):
         self.layout.addWidget(self.btn_plot)
         self.setLayout(self.layout)
 
+
+
     def on_swimmer_data_signal(self,signal):
         self.swimmer_data = signal['swimmer_data'] #pandas dataframe
         self.btn_plot.setEnabled(True)
@@ -62,8 +64,8 @@ class SwimmerPlotter(QWidget):
         self.stack_rect_lists = []
         self.offset_list = [0]*len(self.stack_lists.ix[:,0])
         for i in range(len(self.stack_lists.keys())):
-            self.stack_rect_lists.append(self.ax.barh(self.bar_locations, self.stack_lists.ix[:,i], self.bar_width, edgecolor='k', left=self.offset_list))
+            self.stack_self.ax.barh(self.bar_locations, self.stack_lists.ix[:,i], self.bar_width, edgecolor='k', left=self.offset_list)
             self.offset_list = [sum(x) for x in zip(self.offset_list, self.stack_lists.ix[:,i])]
-            print(self.stack_rect_lists[i])
+
         self.canvas.draw()
         self.ax.hold(False) #rewrite the plot when plot() called

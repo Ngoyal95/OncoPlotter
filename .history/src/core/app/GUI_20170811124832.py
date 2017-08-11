@@ -53,11 +53,11 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Spider_Box.addWidget(self.Spider_Splitter)
         self.Spider_Widget.setLayout(self.Spider_Box)
 
-        self.Swimmer_Plot = SwimmerPlotter(self)
-        self.Swimmer = Swimmer(self)
         self.Swimmer_Widget = QWidget()
         self.Swimmer_Box = QVBoxLayout()
         self.Swimmer_Splitter = QSplitter(QtCore.Qt.Horizontal)
+        self.Swimmer_Plot = SwimmerPlotter(self)
+        self.Swimmer = Swimmer(self)
         self.Swimmer_Splitter.addWidget(self.Swimmer)
         self.Swimmer_Splitter.addWidget(self.Swimmer_Plot)
         self.Swimmer_Box.addWidget(self.Swimmer_Splitter)
@@ -96,7 +96,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addAction(self.spiderAction)
 
         self.swimmerAction = QAction(QtGui.QIcon(os.path.join(image_dir, r'images\swimmer_stack.png')), 'Swimmer plot', self)
-        self.swimmerAction.triggered.connect(self.launch_swimmer)
+        self.swimmerAction.triggered.connect(self.launch_spider)
         self.swimmerAction.setIconText("Swimmer")
         self.swimmerAction.setEnabled(False)
         self.toolBar.addAction(self.swimmerAction)

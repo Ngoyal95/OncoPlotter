@@ -62,7 +62,7 @@ class SwimmerPlotter(QWidget):
         self.stack_rect_lists = []
         self.offset_list = [0]*len(self.stack_lists.ix[:,0])
         for i in range(len(self.stack_lists.keys())):
-            self.stack_rect_lists.append(self.ax.barh(self.bar_locations, self.stack_lists.ix[:,i], self.bar_width, edgecolor='k', left=self.offset_list))
+            self.stack_rect_lists.append() self.ax.barh(self.bar_locations, self.stack_lists.ix[:,i], self.bar_width, edgecolor='k', left=self.offset_list)
             self.offset_list = [sum(x) for x in zip(self.offset_list, self.stack_lists.ix[:,i])]
             print(self.stack_rect_lists[i])
         self.canvas.draw()

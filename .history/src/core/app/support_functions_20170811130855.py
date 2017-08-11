@@ -40,9 +40,8 @@ def parse_df_swimmer(df_swimmer_data):
         pt_sum = sum(pt_dose_lengths)
         list_of_lengths.append(pt_sum)
     df_swimmer_data['Sum'] = list_of_lengths
-    df_swimmer_data = df_swimmer_data.sort_values('Sum',ascending = True) #sort smallest to largest
+    df_swimmer_data = df_swimmer_data.sort_values('Sum',ascending = False) #sort largest to smallest
     df_swimmer_data.ix[:,1:] = df_swimmer_data.ix[:,1:].fillna(0)
-    print(df_swimmer_data)
     return df_swimmer_data
 
 def parse_df_waterfall(df_waterfall_data):
