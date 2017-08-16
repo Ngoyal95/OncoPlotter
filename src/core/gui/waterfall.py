@@ -168,7 +168,7 @@ class Ui_Waterfall(object):
         self.display_responses_as_text = QtWidgets.QCheckBox(self.tab)
         self.display_responses_as_text.setText("")
         self.display_responses_as_text.setChecked(False)
-        self.display_responses_as_text.setAutoExclusive(True)
+        self.display_responses_as_text.setAutoExclusive(False)
         self.display_responses_as_text.setObjectName("display_responses_as_text")
         self.horizontalLayout_8.addWidget(self.display_responses_as_text)
         spacerItem3 = QtWidgets.QSpacerItem(10, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
