@@ -105,7 +105,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         #Signal interconnections
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
         self.waterfall_data_signal.connect(self.Waterfall_Plot.on_waterfall_data_signal)
-        self.Waterfall.general_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal)
+        self.Waterfall.plot_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal)
         self.Waterfall_Plot.generated_rectangles_signal.connect(self.Waterfall.on_generated_rectangles_signal)
 
         self.swimmer_data_signal.connect(self.Swimmer.on_swimmer_data_signal)
