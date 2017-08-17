@@ -48,9 +48,12 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
     plot_settings_signal = QtCore.pyqtSignal(list) #send list of plotting params
     updated_rectangles_signal = QtCore.pyqtSignal(list) #send list of updated artists for redrawing
+    updated_keys_and_colors_signal = QtCore.pyqtSignal(list)
 
     def __init__(self, parent):
         super(Waterfall,self).__init__(parent)
+        
+        #setup
         self.setupUi(self)
         self.initialize_settings()
 
@@ -59,12 +62,10 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.btn_apply_keys_and_colors_settings.clicked.connect(self.send_settings)
         self.patient_tree = self.create_patient_tree()
         self.data_viewer_container.addWidget(self.patient_tree)
-        self.btn_color_test.clicked.connect(self.get_color)
+        self.btn_apply_keys_and_colors_settings.clicked.connect(self.send_keys_and_colors_settings)
         
-    def get_color(self):
-        self.color = QColorDialog.getColor() #returns a color object
-        print(color)
-
+    
+    #### Initialization functions ####
     def initialize_settings(self):
         '''
         Load stored settings for keys and colors
@@ -73,7 +74,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.keys_and_colors = shelfFile['UserSettings']
             shelfFile.close()
 
-        
+    #### Signal related functions ####
     def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
         
@@ -85,27 +86,33 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.btn_finalize_plot.setEnabled(True)
         self.btn_apply_keys_and_colors_settings.setEnabled(True)
 
+    def send_keys_and_colors_settings(self):
+        #emits updated keys and colors settings to the plotter widget. updated settings are stored in this widgets self.keys_and_colors variable
+        self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #will update the plot
+        self.add_items() #update the tree with new keys and colors
+
     def send_settings(self):
         '''
         Emit both general plot settings, and color labeling settings. These are the settings to be used when the plot is created.
         
         '''
         self.general_settings = [
-                                        self.plot_title.text(),
-                                        self.x_label.text(),
-                                        self.y_label.text(),
-                                        [self.twenty_percent_line.isChecked(),
-                                        self.thirty_percent_line.isChecked(),
-                                        self.zero_percent_line.isChecked()],
-                                        [self.display_responses_as_text.isChecked(),
-                                        self.display_responses_as_color.isChecked(),
-                                        self.use_custom_keys.isChecked()],
-                                        self.include_table.isChecked(),
-                                        self.show_cancer_type.isChecked(),
-                                        self.get_updated_color_coding()
-                                    ]
+                                self.plot_title.text(),
+                                self.x_label.text(),
+                                self.y_label.text(),
+                                [self.twenty_percent_line.isChecked(),
+                                self.thirty_percent_line.isChecked(),
+                                self.zero_percent_line.isChecked()],
+                                [self.display_responses_as_text.isChecked(),
+                                self.display_responses_as_color.isChecked(),
+                                self.use_custom_keys.isChecked()],
+                                self.include_table.isChecked(),
+                                self.show_cancer_type.isChecked(),
+                                self.get_updated_color_coding()
+                                ]
         self.plot_settings_signal.emit(self.general_settings)
 
+    #### Patient tree viewer related functions ####
     def create_patient_tree(self):
         '''
         Create QTreeWidget populated with a patient's data for the DataEntry dialog.
@@ -150,6 +157,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.rect_item.setFlags(self.rect_item.flags() | QtCore.Qt.ItemIsEditable)
             i+=1
 
+    #### Miscellaneous functions ####
     def get_updated_color_coding(self):
         tmp_updated_color_coding = []
         self.root = self.tree.invisibleRootItem()
@@ -157,9 +165,9 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         #return list of keys (children are iterated in order they were entered, which agrees with order of patient data in waterfall_data lists)
         return [self.tree.itemWidget(self.root.child(i),4).currentText() for i in range(child_count)]
 
-    def on_updated_tree_item(self):
-        #update the rectangle which was edited
-        pass
+    def get_color(self):
+        self.color = QColorDialog.getColor() #returns a QColor object
+        print(self.color)
 
 class WaterfallPlotter(QWidget):
 
@@ -167,15 +175,17 @@ class WaterfallPlotter(QWidget):
 
     def __init__(self,parent):
         super(WaterfallPlotter,self).__init__(parent)
+        
+        #initialize
         self.initialize_settings()
         self.settings_update = False
 
+        #creating plotting widget
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
-
         self.toolbar = NavigationToolbar(self.canvas,self)
 
-        self.btn_plot = QPushButton('Default Plot')
+        self.btn_plot = QPushButton('Plot')
         self.btn_plot.clicked.connect(self.plot)
 
         self.layout = QVBoxLayout()
@@ -183,12 +193,8 @@ class WaterfallPlotter(QWidget):
         self.layout.addWidget(self.canvas)
         self.layout.addWidget(self.btn_plot)
         self.setLayout(self.layout)
-        
     
-    def on_waterfall_data_signal(self,signal):
-        self.waterfall_data = signal['waterfall_data'] #pandas dataframe
-        self.btn_plot.setEnabled(True)
-
+    #### Initialization functions ####
     def initialize_settings(self):
         '''
         Load stored settings for keys and colors
@@ -197,14 +203,21 @@ class WaterfallPlotter(QWidget):
             self.keys_and_colors = shelfFile['UserSettings']
             shelfFile.close()
 
+    #### Signal related functions ####
+    def on_updated_keys_and_colors(self,signal):
+        self.keys_and_colors = signal
+        self.plot() #replot with new settings (will reflect key color changes)
+
+    def on_waterfall_data_signal(self,signal):
+        self.waterfall_data = signal['waterfall_data'] #pandas dataframe
+        self.btn_plot.setEnabled(True)
+
     def on_general_settings_signal(self,signal):
         self.gen_settings = signal
         self.settings_update = True
         self.plot()
     
-    def get_bar_colors(self,responses):
-        return [self.keys_and_colors[x] for x in responses]
-
+    #### Plotting functions ####
     def plot(self):
         '''
         Plot waterfall data
@@ -335,3 +348,10 @@ class WaterfallPlotter(QWidget):
                 ax.text(rect.get_x() + rect.get_width()/2., hgt,
                         '%s' % waterfall_data['Cancer'][i], ha='center', va=valign, rotation='vertical')
                 i+=1   
+
+    #### Miscellaneous functions ####
+    def get_bar_colors(self,keys):
+        '''
+        Used to get colors from the dictionary self.keys_and_colors based on the list of keys provided
+        '''
+        return [self.keys_and_colors[key] for key in keys]

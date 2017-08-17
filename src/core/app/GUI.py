@@ -40,6 +40,9 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.setupUi(self)
         self.setup_plot_keys_and_colors()
         self.setup_window()
+        self.setup_waterfall_signals()
+        self.setup_swimmer_signals()
+        self.setup_spider_signals()
 
     def setup_plot_keys_and_colors(self):
         '''
@@ -133,13 +136,22 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addSeparator()
 
         #Signal interconnections
+    def setup_waterfall_signals(self):
+        #This dialog to child widgets, send the waterfall data imported from spreadsheet template
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
         self.waterfall_data_signal.connect(self.Waterfall_Plot.on_waterfall_data_signal)
-        self.Waterfall.plot_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal)
-        self.Waterfall_Plot.generated_rectangles_signal.connect(self.Waterfall.on_generated_rectangles_signal)
+        
+        #communication between child widgets
+        self.Waterfall.plot_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal) #updated plot settings
+        self.Waterfall.updated_keys_and_colors_signal.connect(self.Waterfall_Plot.on_updated_keys_and_colors) #updated keys and colors settings
+        self.Waterfall_Plot.generated_rectangles_signal.connect(self.Waterfall.on_generated_rectangles_signal) #updated plot, send matplotlib artists (rectangles)
 
+    def setup_swimmer_signals(self):
         self.swimmer_data_signal.connect(self.Swimmer.on_swimmer_data_signal)
         self.swimmer_data_signal.connect(self.Swimmer_Plot.on_swimmer_data_signal)
+
+    def setup_spider_signals(self):
+        pass
 
     #Launch functions
     def launch_waterfall(self):
