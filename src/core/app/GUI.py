@@ -43,7 +43,8 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.setup_waterfall_signals()
         self.setup_swimmer_signals()
         self.setup_spider_signals()
-
+    
+    #### Setup functions ####
     def setup_plot_keys_and_colors(self):
         '''
         Set defaults for keys and color coding if shelve files do not exist. Otherwise do nothing since they exist
@@ -54,7 +55,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         existance_check = [waterfall_file.is_file(),spider_file.is_file(),swimmer_settings.is_file()]
 
         if ~existance_check[0]:
-            #waterfallsettings don't exist
+            #if WaterfallSettings.dat doesn't exist, create it and set default params
             shelfFile = shelve.open('WaterfallSettings')
             shelfFile['DefaultSettings'] = self.default_waterfall_keys_and_colors
             shelfFile['UserSettings'] = self.default_waterfall_keys_and_colors
@@ -96,9 +97,9 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.Swimmer_Box.addWidget(self.Swimmer_Splitter)
         self.Swimmer_Widget.setLayout(self.Swimmer_Box)
 
-        self.stackedWidget.addWidget(self.Waterfall_Widget) #0
-        self.stackedWidget.addWidget(self.Spider_Widget) #1
-        self.stackedWidget.addWidget(self.Swimmer_Widget) #2
+        self.stackedWidget.addWidget(self.Waterfall_Widget) #0 in stackedwidget
+        self.stackedWidget.addWidget(self.Spider_Widget) #1 in stackedwidget
+        self.stackedWidget.addWidget(self.Swimmer_Widget) #2 in stackedwidget
         self.stackedWidget.hide()
 
         #Set up toolBar
@@ -135,7 +136,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addAction(self.swimmerAction)
         self.toolBar.addSeparator()
 
-        #Signal interconnections
+    #### Signal functions ####
     def setup_waterfall_signals(self):
         #This dialog to child widgets, send the waterfall data imported from spreadsheet template
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
@@ -153,7 +154,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def setup_spider_signals(self):
         pass
 
-    #Launch functions
+    #### Launch dialogs functions ####
     def launch_waterfall(self):
         self.stackedWidget.setCurrentIndex(0)
         self.stackedWidget.show()

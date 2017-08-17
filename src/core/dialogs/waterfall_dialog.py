@@ -18,13 +18,37 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-from PyQt5.QtWidgets import (QColorDialog, QHeaderView, QApplication, QDialog, QWidget, QPushButton, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QComboBox)
+from PyQt5.QtWidgets import (QListWidgetItem, QColorDialog, QHeaderView, QApplication, QDialog, QWidget, QPushButton, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QComboBox)
 from PyQt5 import QtCore, QtGui
 
 import core.gui.waterfall as waterfall
 import numpy as np
 import shelve
+import re
 from pprint import pprint
+
+class ColorButton(QPushButton):
+    '''
+    Custom button for color selection
+    '''
+    def __init__(self,parent,color):
+        super(QPushButton,self).__init__(parent)
+        
+        self.setAutoFillBackground(True)
+        self.color = color
+        self.set_background_color()
+        self.clicked.connect(self.get_color)
+
+    def get_color(self):
+        self.color_select = QColorDialog.getColor()
+        self.color = self.color_select.name(0) #return hex code string
+        self.set_background_color()
+
+    def set_background_color(self):
+        self.setStyleSheet("background-color: %s" % self.color)
+
+    def give_color(self):
+        return self.color
 
 class CustomCombo(QComboBox):
     def __init__(self,parent,bar_keys_colors,response_type):
@@ -48,23 +72,28 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
     plot_settings_signal = QtCore.pyqtSignal(list) #send list of plotting params
     updated_rectangles_signal = QtCore.pyqtSignal(list) #send list of updated artists for redrawing
-    updated_keys_and_colors_signal = QtCore.pyqtSignal(list)
+    updated_keys_and_colors_signal = QtCore.pyqtSignal(dict) #send updated keys_and_colors dict (stored in this widget's self.keys_and_colors variable)
 
     def __init__(self, parent):
         super(Waterfall,self).__init__(parent)
         
-        #setup
+        #Initialize
         self.setupUi(self)
         self.initialize_settings()
+        
+        self.patient_tree = self.create_patient_tree()
+        self.data_viewer_container.addWidget(self.patient_tree) #create tree (returned by function) and add tree to viewer
+        
+        self.populate_keys_and_colors_view()
+        
+        self.btn_get_color = ColorButton(self,'#a4e9ff')
+        self.color_btn_container.addWidget(self.btn_get_color)
 
         #Button functions
-        self.btn_apply_general_settings.clicked.connect(self.send_settings)
-        self.btn_apply_keys_and_colors_settings.clicked.connect(self.send_settings)
-        self.patient_tree = self.create_patient_tree()
-        self.data_viewer_container.addWidget(self.patient_tree)
-        self.btn_apply_keys_and_colors_settings.clicked.connect(self.send_keys_and_colors_settings)
-        
-    
+        self.btn_apply_general_settings.clicked.connect(self.send_settings) #apply general settings and replot
+        self.btn_apply_keys_and_colors_settings.clicked.connect(self.update_keys_and_colors)
+        self.btn_add_key.clicked.connect(self.add_key_to_list)
+
     #### Initialization functions ####
     def initialize_settings(self):
         '''
@@ -74,7 +103,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.keys_and_colors = shelfFile['UserSettings']
             shelfFile.close()
 
-    #### Signal related functions ####
+    #### Signal functions ####
     def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
         
@@ -86,10 +115,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.btn_finalize_plot.setEnabled(True)
         self.btn_apply_keys_and_colors_settings.setEnabled(True)
 
-    def send_keys_and_colors_settings(self):
-        #emits updated keys and colors settings to the plotter widget. updated settings are stored in this widgets self.keys_and_colors variable
-        self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #will update the plot
-        self.add_items() #update the tree with new keys and colors
+
 
     def send_settings(self):
         '''
@@ -110,7 +136,8 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
                                 self.show_cancer_type.isChecked(),
                                 self.get_updated_color_coding()
                                 ]
-        self.plot_settings_signal.emit(self.general_settings)
+        self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #update the self.keys_and_colors variable in the plot widget
+        self.plot_settings_signal.emit([self.keys_and_colors, self.general_settings])
 
     #### Patient tree viewer related functions ####
     def create_patient_tree(self):
@@ -157,6 +184,77 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.rect_item.setFlags(self.rect_item.flags() | QtCore.Qt.ItemIsEditable)
             i+=1
 
+    def update_tree(self):
+        #emits updated keys and colors settings to the plotter widget. updated settings are stored in this widgets self.keys_and_colors variable
+        
+        self.add_items() #update the tree with new keys and colors
+
+    #### Custom keys and colors functions ####
+    def populate_keys_and_colors_view(self):
+        if hasattr(self,'tree_keys_and_colors'):
+            self.tree_keys_and_colors.setParent(None)
+            del self.tree_keys_and_colors
+            self.tree_keys_and_colors = self.create_keys_and_colors_tree()
+            self.keys_and_colors_container.addWidget(self.tree_keys_and_colors)
+        else:
+            self.tree_keys_and_colors = self.create_keys_and_colors_tree()
+            self.keys_and_colors_container.addWidget(self.tree_keys_and_colors)
+
+    def create_keys_and_colors_tree(self):
+        '''
+        Populate the keys and colors tree (self.list_keys_and_colors) with values in self.keys_and_colors
+        '''
+        #######NOTE: FOR SOME REASON KEY AND COLOR LOCATIONS ARE SWITCHED IN TREE--- WHY??
+
+        self.tree_keys_and_colors = QTreeWidget()
+        self.root_keys_and_colors = self.tree_keys_and_colors.invisibleRootItem()
+        self.tree_keys_and_colors.setColumnCount(2)
+        self.tree_keys_and_colors.setHeaderItem(QTreeWidgetItem(['Color','Key']))
+        self.root_keys_and_colors.setExpanded(True)
+        self.tree_keys_and_colors.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tree_keys_and_colors.header().setStretchLastSection(False)
+
+        #initialize items in tree
+        for key in self.keys_and_colors.keys():
+            self.pixmap = QtGui.QPixmap(20,20)
+            self.pixmap.fill(QtGui.QColor(self.keys_and_colors[key]))
+            self.color_icon = QtGui.QIcon(self.pixmap)
+            self.key_color_item = QTreeWidgetItem(self.root_keys_and_colors)
+            self.key_color_item.setTextAlignment(0,4)
+            self.key_color_item.setText(0,key)
+            self.tree_keys_and_colors.setItemWidget(self.key_color_item,1,ColorButton(self,self.keys_and_colors[key])) #add custom button for color
+            
+        return self.tree_keys_and_colors
+
+    def add_key_to_list(self):
+        '''
+        Add a key to the list when self.btn_add_key is pressed. Color obtained from self.btn_get_color
+        '''
+        self.key_to_add = self.key_name.text()
+        self.color_to_add = self.btn_get_color.give_color()
+
+        if re.search('[a-zA-Z0-9]', self.key_to_add):
+            self.key_name.clear() #clear lineedit
+            self.keys_and_colors[self.key_to_add] = self.color_to_add
+            self.populate_keys_and_colors_view()
+
+        pprint(self.keys_and_colors)
+
+        
+    def update_keys_and_colors(self):
+        '''
+        Update self.keys_and_colors and send settings (call self.send_settings()) to reflect changes in plot
+        '''
+        self.root_keys_and_colors = self.tree_keys_and_colors.invisibleRootItem()
+        child_count = self.root_keys_and_colors.childCount()
+        for i in range(child_count):
+            child = self.root_keys_and_colors.child(i)
+            self.key_update = child.text(0)
+            self.color_update = self.tree_keys_and_colors.itemWidget(child,1)
+            self.keys_and_colors[self.key_update] = self.color_update.give_color()
+        self.update_tree()
+        self.send_settings()
+
     #### Miscellaneous functions ####
     def get_updated_color_coding(self):
         tmp_updated_color_coding = []
@@ -164,10 +262,6 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         child_count = self.root.childCount()
         #return list of keys (children are iterated in order they were entered, which agrees with order of patient data in waterfall_data lists)
         return [self.tree.itemWidget(self.root.child(i),4).currentText() for i in range(child_count)]
-
-    def get_color(self):
-        self.color = QColorDialog.getColor() #returns a QColor object
-        print(self.color)
 
 class WaterfallPlotter(QWidget):
 
@@ -185,7 +279,7 @@ class WaterfallPlotter(QWidget):
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas,self)
 
-        self.btn_plot = QPushButton('Plot')
+        self.btn_plot = QPushButton('Create Default Plot (RESET)')
         self.btn_plot.clicked.connect(self.plot)
 
         self.layout = QVBoxLayout()
@@ -203,17 +297,17 @@ class WaterfallPlotter(QWidget):
             self.keys_and_colors = shelfFile['UserSettings']
             shelfFile.close()
 
-    #### Signal related functions ####
+    #### Signal functions ####
     def on_updated_keys_and_colors(self,signal):
-        self.keys_and_colors = signal
-        self.plot() #replot with new settings (will reflect key color changes)
+        self.keys_and_colors = signal #update self.keys_and_colors with the new values from Waterfall widget
 
     def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
         self.btn_plot.setEnabled(True)
 
     def on_general_settings_signal(self,signal):
-        self.gen_settings = signal
+        self.keys_and_colors = signal[0] #update self.keys_and_colors with the new values from Waterfall widget
+        self.gen_settings = signal[1]
         self.settings_update = True
         self.plot()
     
