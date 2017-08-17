@@ -3,7 +3,8 @@
 import ctypes
 import os
 import sys
-
+import shelve
+from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QFrame,
                              QMainWindow, QPushButton, QSizePolicy, QSplitter,
@@ -28,8 +29,37 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def __init__(self,parent=None):
         QMainWindow.__init__(self,parent)
+
+        self.default_waterfall_keys_and_colors = {
+                                'CR':'#03945D',
+                                'PR':'#B1EE97',
+                                'PD':'#FF6F69',
+                                'SD':'#707070'
+                                }
+        
         self.setupUi(self)
+        self.setup_plot_keys_and_colors()
         self.setup_window()
+
+    def setup_plot_keys_and_colors(self):
+        '''
+        Set defaults for keys and color coding if shelve files do not exist. Otherwise do nothing since they exist
+        '''
+        waterfall_file = Path("WaterfallSettings.dat")
+        spider_file = Path("SpiderSettings.dat")
+        swimmer_settings = Path("SwimmerSettings.dat")
+        existance_check = [waterfall_file.is_file(),spider_file.is_file(),swimmer_settings.is_file()]
+
+        if ~existance_check[0]:
+            #waterfallsettings don't exist
+            shelfFile = shelve.open('WaterfallSettings')
+            shelfFile['DefaultSettings'] = self.default_waterfall_keys_and_colors
+            shelfFile['UserSettings'] = self.default_waterfall_keys_and_colors
+        
+        if ~existance_check[1]:
+            pass
+        if ~existance_check[2]:
+            pass
 
     def setup_window(self):
         #Dialogs

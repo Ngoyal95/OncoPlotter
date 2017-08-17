@@ -52,8 +52,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
     def __init__(self, parent):
         super(Waterfall,self).__init__(parent)
         self.setupUi(self)
-        
-        self.get_settings()
+        self.initialize_settings()
 
         #Button functions
         self.btn_apply_general_settings.clicked.connect(self.send_settings)
@@ -66,37 +65,14 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.color = QColorDialog.getColor() #returns a color object
         print(color)
 
-    def get_settings(self):
-        ##########################################################
-        '''NEED TO FIX THIS - CHANGE HOW THIS DATA IS LOADED '''
-        ##########################################################
-        # try:
-        #     with shelve.open('WaterfallSettings') as shelfFile: 
-        #         self.keys_and_colors = shelfFile['keys_and_colors']
-        #         shelfFile.close()
-        # except:
-        #     #set and use default settings
-        #     self.keys_and_colors = {
-        #                             'CR':'#03945D',
-        #                             'PR':'#B1EE97',
-        #                             'PD':'#FF6F69',
-        #                             'SD':'#707070',
-        #                             'a':'r',
-        #                             'b':'g',
-        #                             'c':'b'
-        #                             }
-        #     with shelve.open('WaterfallSettings') as shelfFile:
-        #         shelfFile['keys_and_colors'] = self.keys_and_colors
-        #         shelfFile.close()
-        self.keys_and_colors = {
-                                'CR':'#03945D',
-                                'PR':'#B1EE97',
-                                'PD':'#FF6F69',
-                                'SD':'#707070',
-                                'a':'#FF0000',
-                                'b':'#00FF00',
-                                'c':'#0000FF'
-                                }
+    def initialize_settings(self):
+        '''
+        Load stored settings for keys and colors
+        '''
+        with shelve.open('WaterfallSettings') as shelfFile: 
+            self.keys_and_colors = shelfFile['UserSettings']
+            shelfFile.close()
+
         
     def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
@@ -191,8 +167,7 @@ class WaterfallPlotter(QWidget):
 
     def __init__(self,parent):
         super(WaterfallPlotter,self).__init__(parent)
-
-        self.get_settings()
+        self.initialize_settings()
         self.settings_update = False
 
         self.figure = plt.figure()
@@ -214,37 +189,13 @@ class WaterfallPlotter(QWidget):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
         self.btn_plot.setEnabled(True)
 
-    def get_settings(self):
-        ##########################################################
-        '''NEED TO FIX THIS - CHANGE HOW THIS DATA IS LOADED '''
-        ##########################################################
-        # try:
-        #     with shelve.open('WaterfallSettings') as shelfFile: 
-        #         self.keys_and_colors = shelfFile['keys_and_colors']
-        #         shelfFile.close()
-        # except:
-        #     #set and use default settings
-        #     self.keys_and_colors = {
-        #                             'CR':'#03945D',
-        #                             'PR':'#B1EE97',
-        #                             'PD':'#FF6F69',
-        #                             'SD':'#707070',
-        #                             'a':'r',
-        #                             'b':'g',
-        #                             'c':'b'
-        #                             }
-        #     with shelve.open('WaterfallSettings') as shelfFile:
-        #         shelfFile['keys_and_colors'] = self.keys_and_colors
-        #         shelfFile.close()
-        self.keys_and_colors = {
-                                'CR':'#03945D',
-                                'PR':'#B1EE97',
-                                'PD':'#FF6F69',
-                                'SD':'#707070',
-                                'a':'#FF0000',
-                                'b':'#00FF00',
-                                'c':'#0000FF'
-                                }
+    def initialize_settings(self):
+        '''
+        Load stored settings for keys and colors
+        '''
+        with shelve.open('WaterfallSettings') as shelfFile: 
+            self.keys_and_colors = shelfFile['UserSettings']
+            shelfFile.close()
 
     def on_general_settings_signal(self,signal):
         self.gen_settings = signal
