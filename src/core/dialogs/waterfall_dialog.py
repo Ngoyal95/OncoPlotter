@@ -237,9 +237,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.key_name.clear() #clear lineedit
             self.keys_and_colors[self.key_to_add] = self.color_to_add
             self.populate_keys_and_colors_view()
-
-        pprint(self.keys_and_colors)
-
+            self.update_tree()
         
     def update_keys_and_colors(self):
         '''
@@ -252,8 +250,9 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             self.key_update = child.text(0)
             self.color_update = self.tree_keys_and_colors.itemWidget(child,1)
             self.keys_and_colors[self.key_update] = self.color_update.give_color()
-        self.update_tree()
         self.send_settings()
+        self.update_tree() #note, we update tree after sending settings so that the tree now reflects any changes in key/color changes in dropdowns
+        #if we do update_tree() before sending, the tree will not properly reflect changes in dropdowns, and changes in key will not appear in plot
 
     #### Miscellaneous functions ####
     def get_updated_color_coding(self):
