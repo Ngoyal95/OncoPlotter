@@ -73,7 +73,6 @@ class CustomCombo(QComboBox):
 class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
     plot_settings_signal = QtCore.pyqtSignal(list) #send list of plotting params
-    updated_rectangles_signal = QtCore.pyqtSignal(list) #send list of updated artists for redrawing
     updated_keys_and_colors_signal = QtCore.pyqtSignal(dict) #send updated keys_and_colors dict (stored in this widget's self.keys_and_colors variable)
 
     def __init__(self, parent):
@@ -116,7 +115,6 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.btn_apply_general_settings.setEnabled(True)
         self.btn_finalize_plot.setEnabled(True)
 
-
     def send_settings(self):
         '''
         Emit both general plot settings, and color labeling settings. These are the settings to be used when the plot is created.
@@ -144,7 +142,6 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
     def create_patient_tree(self):
         '''
         Create QTreeWidget populated with a patient's data for the DataEntry dialog.
-        Assumes that self.temp_patient is the patient of interest and that the variable belongs to the dialog.
         '''
         self.tree = QTreeWidget()
         self.root = self.tree.invisibleRootItem()
@@ -186,8 +183,9 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             i+=1
 
     def update_tree(self):
-        #emits updated keys and colors settings to the plotter widget. updated settings are stored in this widgets self.keys_and_colors variable
-        
+        '''
+        Used to update the patient viewer tree with new key names and colors
+        '''
         self.add_items() #update the tree with new keys and colors
 
     #### Custom keys and colors functions ####
@@ -270,7 +268,6 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
 
     #### Miscellaneous functions ####
     def get_updated_color_coding(self):
-        tmp_updated_color_coding = []
         self.root = self.tree.invisibleRootItem()
         child_count = self.root.childCount()
         #return list of keys (children are iterated in order they were entered, which agrees with order of patient data in waterfall_data lists)
@@ -287,7 +284,7 @@ class WaterfallPlotter(QWidget):
         self.initialize_settings()
         self.settings_update = False
 
-        #creating plotting widget
+        #create plotting widget
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas,self)

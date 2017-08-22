@@ -4,6 +4,7 @@ import ctypes
 import os
 import sys
 import shelve
+import re
 from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QFrame,
@@ -37,11 +38,25 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                                 'PD':'#FF6F69',
                                 'SD':'#707070'
                                 }
+
         self.default_spider_keys_and_colors = {
                                 'CR':'#03945D',
                                 'PR':'#B1EE97',
                                 'PD':'#FF6F69',
                                 'SD':'#707070'
+                                }
+
+        self.default_spider_events_keys_and_colors = {
+                                'New Lesions':'#e00b0b',
+                                'Clinical Progression':'#e05c0b',
+                                'Treatment Ongoing':'#000000',
+                                None:'None'
+                                }
+        self.default_spider_event_markers = {
+                                'New Lesions':'^',
+                                'Clinical Progression':'D',
+                                'Treatment Ongoing':'>',
+                                None:''                     
                                 }
 
         self.default_swimmer_keys_and_colors = {}
@@ -72,7 +87,9 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         if ~existance_check[1]:
             shelfFile = shelve.open('SpiderSettings')
             shelfFile['DefaultSettings'] = self.default_spider_keys_and_colors
-            shelfFile['UserSettings'] = self.default_spider_keys_and_colors
+            shelfFile['KeysColors'] = self.default_spider_keys_and_colors
+            shelfFile['EventsColors'] = self.default_spider_events_keys_and_colors
+            shelfFile['EventMarkers'] = self.default_spider_event_markers
 
         if ~existance_check[2]:
             shelfFile = shelve.open('SwimmerSettings')
@@ -169,35 +186,44 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.spider_data_signal.connect(self.Spider.on_spider_data_signal)
         self.spider_data_signal.connect(self.Spider_Plot.on_spider_data_signal)
 
+        #interconnections between widgets
+        self.Spider.general_settings_signal.connect(self.Spider_Plot.on_general_settings_signal) #updated plot settings
+        self.Spider.updated_keys_events_and_colors_signal.connect(self.Spider_Plot.on_updated_keys_events_and_colors) #updated the keys,events,and their color settings
+        self.Spider_Plot.generated_series_signal.connect(self.Spider.on_generated_series_signal) #plot was updated, send back Line2D objects
+        
     #### Launch dialogs functions ####
     def launch_waterfall(self):
+        self.statusbar.showMessage('Waterfall plot')
         self.stackedWidget.setCurrentIndex(0)
         self.stackedWidget.show()
 
     def launch_spider(self):
+        self.statusbar.showMessage('Spider plot')
         self.stackedWidget.setCurrentIndex(1)
         self.stackedWidget.show()
 
     def launch_swimmer(self):
+        self.statusbar.showMessage('Swimmer plot')
         self.stackedWidget.setCurrentIndex(2)
         self.stackedWidget.show()
 
     def import_data(self):
         self.statusbar.showMessage('Importing data')
         self.file_path = QFileDialog.getOpenFileName(self,"Select Data Template", "C:\\")[0]
-        if self.file_path == '':
-            self.waterfallAction.setEnabled(False)
-            self.spiderAction.setEnabled(False)
-            self.swimmerAction.setEnabled(False)
-        else:
+        if bool(self.file_path and self.file_path.strip()):
             self.data_set = import_plot_data(self.file_path)
             self.waterfall_data_signal.emit(self.data_set)
             self.swimmer_data_signal.emit(self.data_set)
             self.spider_data_signal.emit(self.data_set)
-        self.waterfallAction.setEnabled(True)
-        self.spiderAction.setEnabled(True)
-        self.swimmerAction.setEnabled(True)
-        self.statusbar.showMessage('Done importing',2000)
+            self.waterfallAction.setEnabled(True)
+            self.spiderAction.setEnabled(True)
+            self.swimmerAction.setEnabled(True)
+            self.statusbar.showMessage('Done importing')
+        else:
+            self.waterfallAction.setEnabled(False)
+            self.spiderAction.setEnabled(False)
+            self.swimmerAction.setEnabled(False)
+            self.statusbar.showMessage('Import cancelled')
 
 def main():
     myappid = u'OncoPlotter_V1.0'
