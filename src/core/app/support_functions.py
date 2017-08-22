@@ -22,7 +22,7 @@ def import_plot_data(file_path):
 
 
     data_set['waterfall_data'] = parse_df_waterfall(df_waterfall_data)
-    #spider_data = parse_df_spider(df_spider_data)
+    data_set['spider_data'] = parse_df_spider(df_spider_data)
     data_set['swimmer_data'] = parse_df_swimmer(df_swimmer_data)
 
     return data_set
@@ -42,7 +42,6 @@ def parse_df_swimmer(df_swimmer_data):
     df_swimmer_data['Sum'] = list_of_lengths
     df_swimmer_data = df_swimmer_data.sort_values('Sum',ascending = True) #sort smallest to largest
     df_swimmer_data.ix[:,1:] = df_swimmer_data.ix[:,1:].fillna(0)
-    print(df_swimmer_data)
     return df_swimmer_data
 
 def parse_df_waterfall(df_waterfall_data):
@@ -55,7 +54,8 @@ def parse_df_waterfall(df_waterfall_data):
     return df_waterfall_data
 
 def parse_df_spider(df_spider_data):
-    spider_headers = list(df_spider_data)
-    spider_data = {}
-    for header in spider_headers:
-        spider_data[header] = df_spider_data[header]
+    '''
+    Prepare spider plot data for plotting
+    '''
+    #df_spider_data.ix[:,1:] = df_spider_data.ix[:,1:].fillna(0) #fill all NaN's to 0's
+    return df_spider_data

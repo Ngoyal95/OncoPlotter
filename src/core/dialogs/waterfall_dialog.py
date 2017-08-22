@@ -17,15 +17,17 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib import rc
 
-from PyQt5.QtWidgets import (QListWidgetItem, QColorDialog, QHeaderView, QApplication, QDialog, QWidget, QPushButton, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QComboBox)
+from PyQt5.QtWidgets import (QFontDialog, QListWidgetItem, QColorDialog, QHeaderView, QApplication, QDialog, QWidget, QPushButton, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QComboBox)
 from PyQt5 import QtCore, QtGui
 
-import core.gui.waterfall as waterfall
 import numpy as np
 import shelve
 import re
 from pprint import pprint
+
+import core.gui.waterfall as waterfall
 
 class ColorButton(QPushButton):
     '''
@@ -90,9 +92,9 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.color_btn_container.addWidget(self.btn_get_color)
 
         #Button functions
-        self.btn_apply_general_settings.clicked.connect(self.send_settings) #apply general settings and replot
-        self.btn_apply_keys_and_colors_settings.clicked.connect(self.update_keys_and_colors)
+        self.btn_apply_general_settings.clicked.connect(self.update_keys_and_colors) #apply general settings, update keys/colors, and replot
         self.btn_add_key.clicked.connect(self.add_key_to_list)
+        self.btn_default_settings.clicked.connect(self.default_keys_and_colors)
 
     #### Initialization functions ####
     def initialize_settings(self):
@@ -113,8 +115,6 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.add_items() #display in table
         self.btn_apply_general_settings.setEnabled(True)
         self.btn_finalize_plot.setEnabled(True)
-        self.btn_apply_keys_and_colors_settings.setEnabled(True)
-
 
 
     def send_settings(self):
@@ -134,7 +134,8 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
                                 self.use_custom_keys.isChecked()],
                                 self.include_table.isChecked(),
                                 self.show_cancer_type.isChecked(),
-                                self.get_updated_color_coding()
+                                self.get_updated_color_coding(),
+                                self.outline_bars.isChecked()
                                 ]
         self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #update the self.keys_and_colors variable in the plot widget
         self.plot_settings_signal.emit([self.keys_and_colors, self.general_settings])
@@ -254,6 +255,19 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.update_tree() #note, we update tree after sending settings so that the tree now reflects any changes in key/color changes in dropdowns
         #if we do update_tree() before sending, the tree will not properly reflect changes in dropdowns, and changes in key will not appear in plot
 
+    def default_keys_and_colors(self):
+        '''
+        Return the default keys (CR,PR,PD,SD) to their original colors
+        '''
+        temp_shelf = shelve.open('WaterfallSettings')
+        temp_settings = temp_shelf['DefaultSettings']
+        temp_shelf.close()
+        for key in temp_settings.keys():
+            self.keys_and_colors[key] = temp_settings[key]
+
+        self.populate_keys_and_colors_view()
+        self.update_keys_and_colors()
+
     #### Miscellaneous functions ####
     def get_updated_color_coding(self):
         tmp_updated_color_coding = []
@@ -277,10 +291,8 @@ class WaterfallPlotter(QWidget):
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas,self)
-
         self.btn_plot = QPushButton('Create Default Plot (RESET)')
-        self.btn_plot.clicked.connect(self.plot)
-
+        self.btn_plot.clicked.connect(self.default_plot)
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.toolbar)
         self.layout.addWidget(self.canvas)
@@ -311,6 +323,10 @@ class WaterfallPlotter(QWidget):
         self.plot()
     
     #### Plotting functions ####
+    def default_plot(self):
+        self.settings_update = False
+        self.plot()
+
     def plot(self):
         '''
         Plot waterfall data
@@ -340,11 +356,16 @@ class WaterfallPlotter(QWidget):
                 self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
             self.ax.legend(handles=self.patches)
         else:
+            edge_color = None
             self.ax.legend([])
             #settings were updated, we received them and stored in variable self.gen_settings
             self.ax.set_title(self.gen_settings[0])
             self.ax.set_xlabel(self.gen_settings[1])
             self.ax.set_ylabel(self.gen_settings[2])
+            
+            if self.gen_settings[8]:
+                edge_color = 'k'
+
             if self.gen_settings[3][0]:
                 self.ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0, label='twenty_percent')
             if self.gen_settings[3][1]:
@@ -356,7 +377,7 @@ class WaterfallPlotter(QWidget):
                 #color bars with response type
                 used_keys = list(set(self.waterfall_data['Overall response']))
                 self.bar_colors = self.get_bar_colors(self.waterfall_data['Overall response'])
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.waterfall_data['Overall response'])
+                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.waterfall_data['Overall response'], edgecolor=edge_color)
                 for key in used_keys:
                     self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
                 self.ax.legend(handles=self.patches)
@@ -365,12 +386,12 @@ class WaterfallPlotter(QWidget):
                 self.bar_labels = self.gen_settings[7]
                 self.bar_colors = self.get_bar_colors(self.gen_settings[7])
                 used_keys = list(set(self.gen_settings[7]))
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.gen_settings[7])
+                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.gen_settings[7], edgecolor=edge_color)
                 for key in used_keys:
                     self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
                 self.ax.legend(handles=self.patches)
             else:
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], label=self.waterfall_data['Overall response'])
+                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], label=self.waterfall_data['Overall response'], edgecolor=edge_color)
             
             if self.gen_settings[4][0]:
                 #show responses as labels, default color bars

@@ -22,12 +22,9 @@ class SwimmerPlotter(QWidget):
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
-
         self.toolbar = NavigationToolbar(self.canvas,self)
-
         self.btn_plot = QPushButton('Default Plot')
         self.btn_plot.clicked.connect(self.default_plot)
-
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.toolbar)
         self.layout.addWidget(self.canvas)
@@ -64,6 +61,5 @@ class SwimmerPlotter(QWidget):
         for i in range(len(self.stack_lists.keys())):
             self.stack_rect_lists.append(self.ax.barh(self.bar_locations, self.stack_lists.ix[:,i], self.bar_width, edgecolor='k', left=self.offset_list))
             self.offset_list = [sum(x) for x in zip(self.offset_list, self.stack_lists.ix[:,i])]
-            print(self.stack_rect_lists[i])
         self.canvas.draw()
         self.ax.hold(False) #rewrite the plot when plot() called

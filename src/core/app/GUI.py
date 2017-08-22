@@ -14,8 +14,9 @@ from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QFrame,
 import core.gui.mainwindow as mainwindow
 #Support functions
 from core.app.support_functions import import_plot_data
-from core.dialogs.spider_dialog import Spider, SpiderPlotter
+
 #Dialogs
+from core.dialogs.spider_dialog import Spider, SpiderPlotter
 from core.dialogs.swimmer_dialog import Swimmer, SwimmerPlotter
 from core.dialogs.waterfall_dialog import Waterfall, WaterfallPlotter
 
@@ -36,14 +37,22 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                                 'PD':'#FF6F69',
                                 'SD':'#707070'
                                 }
-        
+        self.default_spider_keys_and_colors = {
+                                'CR':'#03945D',
+                                'PR':'#B1EE97',
+                                'PD':'#FF6F69',
+                                'SD':'#707070'
+                                }
+
+        self.default_swimmer_keys_and_colors = {}
+
         self.setupUi(self)
         self.setup_plot_keys_and_colors()
         self.setup_window()
         self.setup_waterfall_signals()
         self.setup_swimmer_signals()
         self.setup_spider_signals()
-    
+            
     #### Setup functions ####
     def setup_plot_keys_and_colors(self):
         '''
@@ -61,9 +70,14 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             shelfFile['UserSettings'] = self.default_waterfall_keys_and_colors
         
         if ~existance_check[1]:
-            pass
+            shelfFile = shelve.open('SpiderSettings')
+            shelfFile['DefaultSettings'] = self.default_spider_keys_and_colors
+            shelfFile['UserSettings'] = self.default_spider_keys_and_colors
+
         if ~existance_check[2]:
-            pass
+            shelfFile = shelve.open('SwimmerSettings')
+            shelfFile['DefaultSettings'] = self.default_swimmer_keys_and_colors
+            shelfFile['UserSettings'] = self.default_swimmer_keys_and_colors
 
     def setup_window(self):
         #Dialogs
@@ -136,7 +150,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.toolBar.addAction(self.swimmerAction)
         self.toolBar.addSeparator()
 
-    #### Signal functions ####
+    #### Signal Connections ####
     def setup_waterfall_signals(self):
         #This dialog to child widgets, send the waterfall data imported from spreadsheet template
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
@@ -152,7 +166,8 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.swimmer_data_signal.connect(self.Swimmer_Plot.on_swimmer_data_signal)
 
     def setup_spider_signals(self):
-        pass
+        self.spider_data_signal.connect(self.Spider.on_spider_data_signal)
+        self.spider_data_signal.connect(self.Spider_Plot.on_spider_data_signal)
 
     #### Launch dialogs functions ####
     def launch_waterfall(self):
@@ -168,16 +183,21 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.stackedWidget.show()
 
     def import_data(self):
+        self.statusbar.showMessage('Importing data')
         self.file_path = QFileDialog.getOpenFileName(self,"Select Data Template", "C:\\")[0]
         if self.file_path == '':
-            pass
+            self.waterfallAction.setEnabled(False)
+            self.spiderAction.setEnabled(False)
+            self.swimmerAction.setEnabled(False)
         else:
             self.data_set = import_plot_data(self.file_path)
             self.waterfall_data_signal.emit(self.data_set)
             self.swimmer_data_signal.emit(self.data_set)
+            self.spider_data_signal.emit(self.data_set)
         self.waterfallAction.setEnabled(True)
         self.spiderAction.setEnabled(True)
         self.swimmerAction.setEnabled(True)
+        self.statusbar.showMessage('Done importing',2000)
 
 def main():
     myappid = u'OncoPlotter_V1.0'
