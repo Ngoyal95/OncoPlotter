@@ -15,43 +15,7 @@ import pandas as pd
 from pprint import pprint
 
 import core.gui.spider as spider
-
-class Combo_Keys_and_Colors(QComboBox):
-    def __init__(self,parent,bar_keys_colors,response_type):
-        super(QComboBox,self).__init__(parent)
-        
-        #keys is a dictionary: {'key description':color,...}
-        self.dict_of_keys = bar_keys_colors
-        self.response_type = response_type
-        self.populate()
-
-    def populate(self):
-        '''Override method to add items to dropdown'''
-        for key in list(self.dict_of_keys.keys()):
-            self.pixmap = QtGui.QPixmap(20,20)
-            self.pixmap.fill(QtGui.QColor(self.dict_of_keys[key]))
-            self.color_icon = QtGui.QIcon(self.pixmap)
-            self.addItem(self.color_icon,key)
-        self.setCurrentIndex(self.findText(self.response_type,flags=QtCore.Qt.MatchExactly)) #default to the patient cancer type
-
-class Combo_Events(QComboBox):
-    def __init__(self,parent,event_keys_colors,event):
-        super(QComboBox,self).__init__(parent)
-
-        #events_keys_colors is a dictionary: {'event key description':color,...}
-        self.dict_of_events = event_keys_colors
-        self.event_type = event
-        self.populate()
-
-    def populate(self):
-        '''Override method to add items to the combobox dropdown'''
-        for key in list(self.dict_of_events.keys()):
-            self.pixmap = QtGui.QPixmap(20,20)
-            self.pixmap.fill(QtGui.QColor(self.dict_of_events[key]))
-            self.color_icon = QtGui.QIcon(self.pixmap)
-            self.addItem(self.color_icon,key)
-        self.setCurrentIndex(self.findText(self.event_type,flags=QtCore.Qt.MatchExactly)) #default to the patient cancer type
-      
+from core.gui.custom_widgets import ColorButton, Combo_Events, Combo_Keys_and_Colors
 
 class Spider(QWidget, spider.Ui_Spider):
 
@@ -64,7 +28,10 @@ class Spider(QWidget, spider.Ui_Spider):
         self.initialize_settings()
 
         self.patient_tree = self.create_patient_tree()
-        self.data_viewer_container.addWidget(self.patient_tree)
+        self.plot_setting_viewer.addWidget(self.patient_tree)
+
+        self.populate_keys_tree()
+        self.populate_markers_tree()
         
         #button functions
         self.btn_apply_general_settings.clicked.connect(self.send_settings)
@@ -76,8 +43,8 @@ class Spider(QWidget, spider.Ui_Spider):
         '''
         with shelve.open('SpiderSettings') as shelfFile: 
             self.keys_and_colors = shelfFile['KeysColors']
-            self.events_keys_and_colors = shelfFile['EventsColors']
-            self.events_markers = shelfFile['EventMarkers']
+            self.event_colors = shelfFile['EventsColors']
+            self.event_markers = shelfFile['EventMarkers']
             shelfFile.close()
     
     #### Signal functions ####
@@ -102,7 +69,7 @@ class Spider(QWidget, spider.Ui_Spider):
                                 self.get_updated_responses(),
                                 self.get_updated_events()
                                 ]
-        self.updated_keys_events_and_colors_signal.emit([self.keys_and_colors,self.events_keys_and_colors,self.events_markers])
+        self.updated_keys_events_and_colors_signal.emit([self.keys_and_colors, self.event_colors, self.event_markers])
         self.general_settings_signal.emit(self.general_settings)
 
     #### Patient tree viewer related functions ####
@@ -116,9 +83,9 @@ class Spider(QWidget, spider.Ui_Spider):
                         'Patient #',
                         'Cancer',
                         'Best response',
-                        'Color key',
-                        'Time from baseline',
-                        'Tumor burden % change',
+                        'Key',
+                        'Timepoint',
+                        '% Change',
                         'Event'
                         ]
         self.headers_item = QTreeWidgetItem(self.headers)
@@ -162,7 +129,7 @@ class Spider(QWidget, spider.Ui_Spider):
                     if self.insert_str.lower() == 'nan':
                         self.insert_str = '-'
                     self.exam_item.setText(col, self.insert_str)
-                self.tree.setItemWidget(self.exam_item, len(self.headers)-1, Combo_Events(self,self.events_keys_and_colors,self.events_received[i][j]))
+                self.tree.setItemWidget(self.exam_item, len(self.headers)-1, Combo_Events(self,self.event_colors,self.events_received[i][j]))
 
     def update_tree(self):
         '''
@@ -197,6 +164,89 @@ class Spider(QWidget, spider.Ui_Spider):
             temp_list_of_patient_events.append(temp_event_list)
         return temp_list_of_patient_events
 
+    #### Custom keys,markers,colors functions ####
+    #create trees
+    def create_keys_tree(self):
+        self.tree_keys_and_colors = QTreeWidget()
+        self.root_keys_and_colors = self.tree_keys_and_colors.invisibleRootItem()
+        self.tree_keys_and_colors.setColumnCount(2)
+        self.tree_keys_and_colors.setHeaderItem(QTreeWidgetItem(['Key','Color']))
+        self.root_keys_and_colors.setExpanded(True)
+        self.tree_keys_and_colors.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tree_keys_and_colors.header().setStretchLastSection(False)
+
+        #initialize items in tree
+        for key in self.keys_and_colors.keys():
+            self.pixmap = QtGui.QPixmap(20,20)
+            self.pixmap.fill(QtGui.QColor(self.keys_and_colors[key]))
+            self.color_icon = QtGui.QIcon(self.pixmap)
+            self.key_color_item = QTreeWidgetItem(self.root_keys_and_colors)
+            self.key_color_item.setTextAlignment(0,4)
+            self.key_color_item.setText(0,key)
+            self.tree_keys_and_colors.setItemWidget(self.key_color_item,1,ColorButton(self,self.keys_and_colors[key])) #add custom button for color
+            
+        return self.tree_keys_and_colors
+
+    def create_markers_tree(self):
+        self.tree_markers_and_colors = QTreeWidget()
+        self.root_markers_and_colors = self.tree_markers_and_colors.invisibleRootItem()
+        self.tree_markers_and_colors.setColumnCount(3)
+        self.tree_markers_and_colors.setHeaderItem(QTreeWidgetItem(['Marker','Symbol','Color']))
+        self.root_markers_and_colors.setExpanded(True)
+        self.tree_markers_and_colors.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tree_markers_and_colors.header().setStretchLastSection(False)
+
+        #initialize items in tree
+        for key in self.event_markers.keys():
+            self.pixmap = QtGui.QPixmap(20,20)
+            self.pixmap.fill(QtGui.QColor(self.event_colors[key]))
+            self.color_icon = QtGui.QIcon(self.pixmap)
+            self.marker_color_item = QTreeWidgetItem(self.root_markers_and_colors)
+            self.marker_color_item.setTextAlignment(0,4)
+            self.marker_color_item.setText(0,key)
+            self.marker_color_item.setText(1,self.event_markers[key])
+            self.tree_markers_and_colors.setItemWidget(self.marker_color_item,2,ColorButton(self,self.event_colors[key])) #add custom button for color
+        
+        return self.tree_markers_and_colors
+
+    #populate trees
+    def populate_keys_tree(self):
+        if hasattr(self,'keys_tree'):
+            self.keys_tree.setParent(None)
+            del self.keys_tree
+            self.keys_tree = self.create_keys_tree()
+            self.keys_tree.addWidget(self.keys_tree)
+        else:
+            self.keys_tree = self.create_keys_tree()
+            self.keys_and_colors_container.addWidget(self.keys_tree)
+
+    def populate_markers_tree(self):
+        if hasattr(self,'markers_tree'):
+            self.markers_tree.setParent(None)
+            del self.markers_tree
+            self.markers_tree = self.create_markers_tree()
+            self.markers_and_colors_container.addWidget(self.markers_tree)
+        else:
+            self.markers_tree = self.create_markers_tree()
+            self.markers_and_colors_container.addWidget(self.markers_tree)
+
+    #Add key or marker
+    def add_key(self):
+        pass
+    def add_marker(self):
+        pass
+    #update dictionaries and plot
+    def update_keys(self):
+        pass
+    def update_markers(self):
+        pass
+    #default keys, markers, and colors
+    def default_keys(self):
+        pass
+    def default_markers(self):
+        pass
+    
+
 class SpiderPlotter(QWidget):
     
     generated_series_signal = QtCore.pyqtSignal(list)
@@ -227,8 +277,8 @@ class SpiderPlotter(QWidget):
         '''
         with shelve.open('SpiderSettings') as shelfFile: 
             self.keys_and_colors = shelfFile['KeysColors']
-            self.events_keys_and_colors = shelfFile['EventsColors']
-            self.events_markers = shelfFile['EventMarkers']
+            self.event_colors = shelfFile['EventsColors']
+            self.event_markers = shelfFile['EventMarkers']
             shelfFile.close()
 
     #### Signal functions ####
@@ -250,8 +300,8 @@ class SpiderPlotter(QWidget):
     
     def on_updated_keys_events_and_colors(self,signal):
         #self.keys_and_colors = signal[0]
-        #self.events_keys_and_colors = signal[1]
-        #self.events_markers = signal[2]
+        #self.event_colors = signal[1]
+        #self.event_markers = signal[2]
         pass
 
     #### Plotting functions ####
@@ -306,8 +356,8 @@ class SpiderPlotter(QWidget):
             #plot events with color coding
             for i in range(len(self.pt_series)):
                 self.pt_event_locations = [x if x is not 'Nan' else 0 for x in self.y_axis_marks.ix[:,i]] #can't plot if y location is a string
-                self.pt_event_colors = [self.events_keys_and_colors[x] for x in self.patient_events[i]]
-                self.pt_event_markers = [self.events_markers[x] for x in self.patient_events[i]]
+                self.pt_event_colors = [self.event_colors[x] for x in self.patient_events[i]]
+                self.pt_event_markers = [self.event_markers[x] for x in self.patient_events[i]]
 
                 for m, c, x, y in zip(self.pt_event_markers,self.pt_event_colors,self.x_axis_marks,self.pt_event_locations):
                     self.ax.plot(x,y,marker=m,c=c)

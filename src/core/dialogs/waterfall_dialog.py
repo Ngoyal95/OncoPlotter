@@ -28,47 +28,7 @@ import re
 from pprint import pprint
 
 import core.gui.waterfall as waterfall
-
-class ColorButton(QPushButton):
-    '''
-    Custom button for color selection
-    '''
-    def __init__(self,parent,color):
-        super(QPushButton,self).__init__(parent)
-        
-        self.setAutoFillBackground(True)
-        self.color = color
-        self.set_background_color()
-        self.clicked.connect(self.get_color)
-
-    def get_color(self):
-        self.color_select = QColorDialog.getColor()
-        self.color = self.color_select.name(0) #return hex code string
-        self.set_background_color()
-
-    def set_background_color(self):
-        self.setStyleSheet("background-color: %s" % self.color)
-
-    def give_color(self):
-        return self.color
-
-class CustomCombo(QComboBox):
-    def __init__(self,parent,bar_keys_colors,response_type):
-        super(QComboBox,self).__init__(parent)
-        
-        #keys is a dictionary: {'key description':color,...}
-        self.dict_of_keys = bar_keys_colors
-        self.response_type = response_type
-        self.populate()
-
-    def populate(self):
-        '''Override method to add items to list'''
-        for key in list(self.dict_of_keys.keys()):
-            self.pixmap = QtGui.QPixmap(20,20)
-            self.pixmap.fill(QtGui.QColor(self.dict_of_keys[key]))
-            self.color_icon = QtGui.QIcon(self.pixmap)
-            self.addItem(self.color_icon,key)
-        self.setCurrentIndex(self.findText(self.response_type,flags=QtCore.Qt.MatchExactly)) #default to the patient cancer type
+from core.gui.custom_widgets import ColorButton, Combo_Events, Combo_Keys_and_Colors
 
 class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
@@ -178,7 +138,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
             for col in range(0,4):
                 self.rect_item.setText(col,str(self.rect_params[col]))
                 self.rect_item.setTextAlignment(col,4)
-            self.tree.setItemWidget(self.rect_item, 4, CustomCombo(self,self.keys_and_colors,self.keys_received[i])) #send the label of the rectangle as the key to determine color
+            self.tree.setItemWidget(self.rect_item, 4, Combo_Events(self,self.keys_and_colors,self.keys_received[i])) #send the label of the rectangle as the key to determine color
             self.rect_item.setFlags(self.rect_item.flags() | QtCore.Qt.ItemIsEditable)
             i+=1
 
@@ -203,12 +163,10 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         '''
         Populate the keys and colors tree (self.list_keys_and_colors) with values in self.keys_and_colors
         '''
-        #######NOTE: FOR SOME REASON KEY AND COLOR LOCATIONS ARE SWITCHED IN TREE--- WHY??
-
         self.tree_keys_and_colors = QTreeWidget()
         self.root_keys_and_colors = self.tree_keys_and_colors.invisibleRootItem()
         self.tree_keys_and_colors.setColumnCount(2)
-        self.tree_keys_and_colors.setHeaderItem(QTreeWidgetItem(['Color','Key']))
+        self.tree_keys_and_colors.setHeaderItem(QTreeWidgetItem(['Key','Color']))
         self.root_keys_and_colors.setExpanded(True)
         self.tree_keys_and_colors.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tree_keys_and_colors.header().setStretchLastSection(False)

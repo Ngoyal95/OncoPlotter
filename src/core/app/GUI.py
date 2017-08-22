@@ -46,7 +46,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                                 'SD':'#707070'
                                 }
 
-        self.default_spider_events_keys_and_colors = {
+        self.default_spider_event_colors = {
                                 'New Lesions':'#e00b0b',
                                 'Clinical Progression':'#e05c0b',
                                 'Treatment Ongoing':'#000000',
@@ -88,7 +88,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             shelfFile = shelve.open('SpiderSettings')
             shelfFile['DefaultSettings'] = self.default_spider_keys_and_colors
             shelfFile['KeysColors'] = self.default_spider_keys_and_colors
-            shelfFile['EventsColors'] = self.default_spider_events_keys_and_colors
+            shelfFile['EventsColors'] = self.default_spider_event_colors
             shelfFile['EventMarkers'] = self.default_spider_event_markers
 
         if ~existance_check[2]:
