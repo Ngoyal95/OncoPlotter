@@ -50,13 +50,13 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                                 'New Lesions':'#e00b0b',
                                 'Clinical Progression':'#e05c0b',
                                 'Treatment Ongoing':'#000000',
-                                None:'None'
+                                '':'#e1e1e1'
                                 }
         self.default_spider_event_markers = {
                                 'New Lesions':'^',
                                 'Clinical Progression':'D',
                                 'Treatment Ongoing':'>',
-                                None:''                     
+                                '':''                     
                                 }
 
         self.default_swimmer_keys_and_colors = {}

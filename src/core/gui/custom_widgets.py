@@ -61,3 +61,23 @@ class Combo_Events(QComboBox):
             self.addItem(self.color_icon,key)
         self.setCurrentIndex(self.findText(self.event_type,flags=QtCore.Qt.MatchExactly)) #default to the patient cancer type
       
+class Combo_Markers(QComboBox):
+    def __init__(self,parent, mark_dict, default):
+        super(QComboBox,self).__init__(parent)
+
+        self.default = default
+        self.mark_dict = mark_dict
+        self.populate()
+
+    def populate(self):
+        for key in self.mark_dict.keys():
+            self.addItem(self.mark_dict[key])
+        
+        if self.default is not None:
+            self.setCurrentIndex(self.findText(self.default,flags=QtCore.Qt.MatchExactly))
+            
+    def give_marker(self):
+        selected_mark = self.currentText()
+        for key in self.mark_dict.keys():
+            if self.mark_dict[key] == selected_mark:
+                return key
