@@ -59,7 +59,17 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                                 '':''                     
                                 }
 
-        self.default_swimmer_keys_and_colors = {}
+        self.default_swimmer_keys_and_colors = {
+                                'CR':'#03945D',
+                                'PR':'#B1EE97',
+                                'PD':'#FF6F69',
+                                'SD':'#707070',
+                                'DL1':'#1C26AB',
+                                'DL2':'#2F55BB',
+                                'DL3':'#4285CC',
+                                'DL4':'#55B4DD',
+                                'DL5':'#68E4EE'
+                                }
 
         self.setupUi(self)
         self.setup_plot_keys_and_colors()
@@ -83,18 +93,23 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             shelfFile = shelve.open('WaterfallSettings')
             shelfFile['DefaultSettings'] = self.default_waterfall_keys_and_colors
             shelfFile['UserSettings'] = self.default_waterfall_keys_and_colors
-        
+            shelfFile.close()
+
         if ~existance_check[1]:
             shelfFile = shelve.open('SpiderSettings')
             shelfFile['DefaultSettings'] = self.default_spider_keys_and_colors
             shelfFile['KeysColors'] = self.default_spider_keys_and_colors
             shelfFile['EventsColors'] = self.default_spider_event_colors
             shelfFile['EventMarkers'] = self.default_spider_event_markers
+            shelfFile.close()
 
         if ~existance_check[2]:
             shelfFile = shelve.open('SwimmerSettings')
             shelfFile['DefaultSettings'] = self.default_swimmer_keys_and_colors
-            shelfFile['UserSettings'] = self.default_swimmer_keys_and_colors
+            shelfFile['KeysColors'] = self.default_swimmer_keys_and_colors
+            shelfFile['EventsColors'] = self.default_spider_event_colors
+            shelfFile['EventMarkers'] = self.default_spider_event_markers
+            shelfFile.close()
 
     def setup_window(self):
         #Dialogs
@@ -173,20 +188,20 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.waterfall_data_signal.connect(self.Waterfall.on_waterfall_data_signal)
         self.waterfall_data_signal.connect(self.Waterfall_Plot.on_waterfall_data_signal)
         
-        #communication between child widgets
+        #connections between widgets
         self.Waterfall.plot_settings_signal.connect(self.Waterfall_Plot.on_general_settings_signal) #updated plot settings
         self.Waterfall.updated_keys_and_colors_signal.connect(self.Waterfall_Plot.on_updated_keys_and_colors) #updated keys and colors settings
         self.Waterfall_Plot.generated_rectangles_signal.connect(self.Waterfall.on_generated_rectangles_signal) #updated plot, send matplotlib artists (rectangles)
 
     def setup_swimmer_signals(self):
         self.swimmer_data_signal.connect(self.Swimmer.on_swimmer_data_signal)
-        self.swimmer_data_signal.connect(self.Swimmer_Plot.on_swimmer_data_signal)
+        self.Swimmer.plot_signal.connect(self.Swimmer_Plot.on_plot_signal)
 
     def setup_spider_signals(self):
         self.spider_data_signal.connect(self.Spider.on_spider_data_signal)
         self.spider_data_signal.connect(self.Spider_Plot.on_spider_data_signal)
 
-        #interconnections between widgets
+        #connections between widgets
         self.Spider.general_settings_signal.connect(self.Spider_Plot.on_general_settings_signal) #updated plot settings
         self.Spider.updated_keys_events_and_colors_signal.connect(self.Spider_Plot.on_updated_keys_events_and_colors) #updated the keys,events,and their color settings
         self.Spider_Plot.generated_series_signal.connect(self.Spider.on_generated_series_signal) #plot was updated, send back Line2D objects

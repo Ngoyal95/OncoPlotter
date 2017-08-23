@@ -100,11 +100,16 @@ class Spider(QWidget, spider.Ui_Spider):
     #### Signal functions ####
     def on_spider_data_signal(self,signal):
         self.spider_data = signal['spider_data']
+        self.x_axis_marks = self.spider_data.iloc[:len(self.spider_data)-3,0] #all but last row, 0th column of the dataframe is the time from baseline measurement
+        self.y_axis_marks = self.spider_data.iloc[:len(self.spider_data)-3,1:]
+        self.num_of_timepoints = len(self.x_axis_marks)
+        self.number_of_series = len(self.spider_data.columns)-1 #remaining columns are for tumor burden percent changes
+        self.patient_responses = self.spider_data.iloc[len(self.spider_data)-2,1:]
+        self.events = [['']*self.num_of_timepoints]*self.number_of_series
 
     def on_generated_series_signal(self,signal):
         self.series_received = signal[0] #patient plots
         self.responses_received = signal[1] #used to populate tree
-        self.events_received = signal[2] #used to populate tree, lists of events per patient
         self.add_items()
         self.btn_apply_general_settings.setEnabled(True)
 
@@ -118,7 +123,8 @@ class Spider(QWidget, spider.Ui_Spider):
                                 self.y_label.text(),
                                 self.get_updated_responses(),
                                 self.get_updated_events(),
-                                self.spin_markersize.value()
+                                self.spin_markersize.value(),
+                                self.spin_fontsize.value()
                                 ]
         self.updated_keys_events_and_colors_signal.emit([self.keys_and_colors, self.event_colors, self.event_markers])
         self.general_settings_signal.emit(self.general_settings)
@@ -160,7 +166,7 @@ class Spider(QWidget, spider.Ui_Spider):
             self.pt_params = [
                             i,
                             self.spider_data[i][len(self.spider_data)-1],
-                            self.spider_data[i][len(self.spider_data)-1],
+                            self.spider_data[i][len(self.spider_data)-2],
                             None,
                             self.pt_series.get_xdata(orig=True),
                             self.pt_series.get_ydata(orig=True),
@@ -180,7 +186,7 @@ class Spider(QWidget, spider.Ui_Spider):
                     if self.insert_str.lower() == 'nan':
                         self.insert_str = '-'
                     self.exam_item.setText(col, self.insert_str)
-                self.tree.setItemWidget(self.exam_item, len(self.headers)-1, Combo_Events(self,self.event_colors,self.events_received[i][j]))
+                self.tree.setItemWidget(self.exam_item, len(self.headers)-1, Combo_Events(self,self.event_colors,self.events[i][j]))
 
     def update_tree(self):
         '''
@@ -213,7 +219,8 @@ class Spider(QWidget, spider.Ui_Spider):
                                 else '' for j in range(event_count)
                                 ]
             temp_list_of_patient_events.append(temp_event_list)
-        return temp_list_of_patient_events
+        self.events = temp_list_of_patient_events
+        return self.events
 
     #### Custom keys,markers,colors functions ####
     #create trees
@@ -403,11 +410,11 @@ class SpiderPlotter(QWidget):
     #### Signal functions ####
     def on_spider_data_signal(self,signal):
         self.spider_data = signal['spider_data']
-        self.x_axis_marks = self.spider_data.ix[:len(self.spider_data)-3,0] #all but last row, 0th column of the dataframe is the time from baseline measurement
-        self.y_axis_marks = self.spider_data.ix[:len(self.spider_data)-3,1:]
+        self.x_axis_marks = self.spider_data.iloc[:len(self.spider_data)-3,0] #all but last row, 0th column of the dataframe is the time from baseline measurement
+        self.y_axis_marks = self.spider_data.iloc[:len(self.spider_data)-3,1:]
         self.num_of_timepoints = len(self.x_axis_marks)
         self.number_of_series = len(self.spider_data.columns)-1 #remaining columns are for tumor burden percent changes
-        self.patient_responses = self.spider_data.ix[len(self.spider_data)-2,1:]
+        self.patient_responses = self.spider_data.iloc[len(self.spider_data)-2,1:]
         self.patient_events = [['']*self.num_of_timepoints]*self.number_of_series
     
     def on_general_settings_signal(self,signal):
@@ -415,6 +422,7 @@ class SpiderPlotter(QWidget):
         self.patient_responses = signal[3]
         self.patient_events = signal[4]
         self.markersize = signal[5]
+        self.fontsize = signal[6]
         self.settings_update = True
         self.plot()
     
@@ -436,32 +444,32 @@ class SpiderPlotter(QWidget):
         self.figure.clear()
         self.ax = self.figure.add_subplot(111)
         
-        self.patient_cancers = self.spider_data.ix[len(self.spider_data)-1,:]
+        self.patient_cancers = self.spider_data.iloc[len(self.spider_data)-1,:]
         self.series = [] #list of the series being plotted
         self.patches = [] #used for legend
 
         if self.settings_update == False:
             #standard plot, replotted when 'Create Default Plot (RESET)' is clicked
             for i in range(0,self.number_of_series):
-                self.pt_series = [x for x in self.y_axis_marks.ix[:,i] if x is not 'Nan']
-                clr = self.default_keys_and_colors[self.spider_data.ix[len(self.spider_data)-2,1:][i]]
+                self.pt_series = [x for x in self.y_axis_marks.iloc[:,i] if x is not 'Nan']
+                clr = self.default_keys_and_colors[self.spider_data.iloc[len(self.spider_data)-2,1:][i]]
                 self.series.append(self.ax.plot(self.x_axis_marks,self.pt_series, linestyle='solid', linewidth='2', color=clr, marker='o'))
             
-            used_keys = list(set(self.spider_data.ix[len(self.spider_data)-2,1:]))
+            used_keys = list(set(self.spider_data.iloc[len(self.spider_data)-2,1:]))
             for key in used_keys:
                 self.patches.append(mpatches.Patch(color=self.keys_and_colors[key],label=key))
             self.ax.legend(handles=self.patches)
-            self.generated_series_signal.emit([self.series,self.spider_data.ix[len(self.spider_data)-2,1:],[['']*self.num_of_timepoints]*self.number_of_series])
+            self.generated_series_signal.emit([self.series,self.spider_data.iloc[len(self.spider_data)-2,1:]])
             
         else:
             self.ax.legend([])
-            self.ax.set_title(self.plot_titles[0])
-            self.ax.set_xlabel(self.plot_titles[1])
-            self.ax.set_ylabel(self.plot_titles[2])
+            self.ax.set_title(self.plot_titles[0], fontsize = self.fontsize)
+            self.ax.set_xlabel(self.plot_titles[1], fontsize = self.fontsize)
+            self.ax.set_ylabel(self.plot_titles[2], fontsize = self.fontsize)
 
             #plot data with color coding
             for i in range(0,self.number_of_series):
-                self.pt_series = [x for x in self.y_axis_marks.ix[:,i] if x is not 'Nan']
+                self.pt_series = [x for x in self.y_axis_marks.iloc[:,i] if x is not 'Nan']
                 clr = self.keys_and_colors[self.patient_responses[i]]
                 self.series.append(self.ax.plot(self.x_axis_marks,self.pt_series, linestyle='solid', linewidth='2', color=clr, marker='o'))
             
@@ -473,7 +481,7 @@ class SpiderPlotter(QWidget):
 
             #plot events with color coding
             for i in range(len(self.pt_series)):
-                self.pt_event_locations = [x if x is not 'Nan' else 0 for x in self.y_axis_marks.ix[:,i]] #can't plot if y location is a string
+                self.pt_event_locations = [x if x is not 'Nan' else 0 for x in self.y_axis_marks.iloc[:,i]] #can't plot if y location is a string
                 self.pt_event_colors = [self.event_colors[x] for x in self.patient_events[i]]
                 self.pt_event_markers = [self.event_markers[x] for x in self.patient_events[i]]
 

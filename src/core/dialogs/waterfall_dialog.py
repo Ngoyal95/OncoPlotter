@@ -93,7 +93,8 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
                                 self.include_table.isChecked(),
                                 self.show_cancer_type.isChecked(),
                                 self.get_updated_color_coding(),
-                                self.outline_bars.isChecked()
+                                self.outline_bars.isChecked(),
+                                self.spin_fontsize.value()
                                 ]
         self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #update the self.keys_and_colors variable in the plot widget
         self.plot_settings_signal.emit([self.keys_and_colors, self.general_settings])
@@ -291,7 +292,7 @@ class WaterfallPlotter(QWidget):
         self.ax = self.figure.add_subplot(111)
         self.patches = []
         self.bar_labels = self.waterfall_data['Overall response']
-
+        
         if self.settings_update == False:
             self.ax.tick_params(
                             axis='x',          # changes apply to the x-axis
@@ -313,10 +314,11 @@ class WaterfallPlotter(QWidget):
         else:
             edge_color = None
             self.ax.legend([])
+            self.fontsize = self.gen_settings[8]
             #settings were updated, we received them and stored in variable self.gen_settings
-            self.ax.set_title(self.gen_settings[0])
-            self.ax.set_xlabel(self.gen_settings[1])
-            self.ax.set_ylabel(self.gen_settings[2])
+            self.ax.set_title(self.gen_settings[0], fontsize=self.fontsize)
+            self.ax.set_xlabel(self.gen_settings[1], fontsize=self.fontsize)
+            self.ax.set_ylabel(self.gen_settings[2], fontsize=self.fontsize)
             
             if self.gen_settings[8]:
                 edge_color = 'k'

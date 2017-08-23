@@ -1,2 +1,5 @@
-'DefaultSettings', (0, 6)
+'DefaultSettings', (0, 220)
 'UserSettings', (512, 6)
+'KeysColors', (1024, 220)
+'EventsColors', (1536, 140)
+'EventMarkers', (2048, 110)

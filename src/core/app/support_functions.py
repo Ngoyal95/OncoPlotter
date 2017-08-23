@@ -31,12 +31,16 @@ def parse_df_swimmer(df_swimmer_data):
     '''
     Parse dataframe of swimmer plot data and extract dates and events
     '''
+    #drop any patients who are NOT responders (ie drop PD or SD)
+    df_swimmer_data = df_swimmer_data[df_swimmer_data.Response != 'PD']
+    df_swimmer_data = df_swimmer_data[df_swimmer_data.Response != 'SD']
+    
     numcols = len(list(df_swimmer_data)) #number of keys
     numpatients = len(df_swimmer_data.ix[:,0])
 
     list_of_lengths = []
     for row in range(numpatients):
-        pt_dose_lengths = [x for x in df_swimmer_data.ix[row,1:numcols-1] if pd.notnull(x)]
+        pt_dose_lengths = [x for x in df_swimmer_data.iloc[row,3:numcols-1] if pd.notnull(x)]
         pt_sum = sum(pt_dose_lengths)
         list_of_lengths.append(pt_sum)
     df_swimmer_data['Sum'] = list_of_lengths
