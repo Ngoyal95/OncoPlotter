@@ -199,12 +199,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def setup_spider_signals(self):
         self.spider_data_signal.connect(self.Spider.on_spider_data_signal)
-        self.spider_data_signal.connect(self.Spider_Plot.on_spider_data_signal)
-
-        #connections between widgets
-        self.Spider.general_settings_signal.connect(self.Spider_Plot.on_general_settings_signal) #updated plot settings
-        self.Spider.updated_keys_events_and_colors_signal.connect(self.Spider_Plot.on_updated_keys_events_and_colors) #updated the keys,events,and their color settings
-        self.Spider_Plot.generated_series_signal.connect(self.Spider.on_generated_series_signal) #plot was updated, send back Line2D objects
+        self.Spider.plot_signal.connect(self.Spider_Plot.on_plot_signal) #updated plot settings
         
     #### Launch dialogs functions ####
     def launch_waterfall(self):

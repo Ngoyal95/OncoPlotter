@@ -207,6 +207,6 @@ class Ui_Spider(object):
         self.btn_default_markers.setText(_translate("Spider", "Default marker settings"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Spider", "Color coding and markers"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Spider", "Markers reference"))
-        self.btn_apply_general_settings.setText(_translate("Spider", "Apply General Settings"))
+        self.btn_apply_general_settings.setText(_translate("Spider", "Plot"))
         self.pushButton_2.setText(_translate("Spider", "PushButton"))
 
