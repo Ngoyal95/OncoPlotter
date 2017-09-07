@@ -115,7 +115,7 @@ class Swimmer(QWidget, swimmmer.Ui_Swimmer):
                         self.stack_lengths,
                         self.responses,
                         self.events
-                    ]
+        ]
         self.settings = [
                         self.plot_title.text(),
                         self.x_label.text(),
@@ -125,17 +125,17 @@ class Swimmer(QWidget, swimmmer.Ui_Swimmer):
                         self.outline_bars.isChecked(),
                         self.show_events.isChecked(),
                         self.dosage_staging_bool
-                        ]
+        ]
         self.keys_markers_colors = [
                                 self.keys_and_colors,
                                 self.event_colors,
                                 self.event_markers
-                                ]
+        ]
         self.plot_signal.emit([
                             self.values,
                             self.settings,
                             self.keys_markers_colors
-                            ])
+        ])
 
     #### Patient tree viewer related functions ####
     def create_patient_tree(self):
@@ -396,7 +396,7 @@ class SwimmerPlotter(QWidget):
 
         self.plot()
 
-    #### Plot data extraction functions ####
+    #### Plot data extraction functions and plot ####
     def extract_plot_data(self,data):
         '''
         Pull out plotting data (bar locations, bar lengths, responses, and events)
@@ -409,7 +409,7 @@ class SwimmerPlotter(QWidget):
 
     def extract_formatting_data(self,data):
         '''
-        Pull out formatting data (titles, fontsize, markersize)
+        Pull out formatting data (titles, fontsize, markersize, show grid or not, etc..)
         '''
         self.plot_titles = data[0:3]
         self.fontsize = data[3]
@@ -465,6 +465,7 @@ class SwimmerPlotter(QWidget):
 
         self.canvas.draw()
 
+#### Miscellaneous functions ####
 def dosage_staging(stacks):
     '''
     Check the stacks dataframe to determine if multiple dosages occured, returns True if so

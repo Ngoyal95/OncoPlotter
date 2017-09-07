@@ -54,7 +54,7 @@ def parse_df_waterfall(df_waterfall_data):
     '''
     #standard columns (always present first 4 columns & in this order) are: 'Patient number', 'Best response percent change', 'Patient response', 'Cancer'
     #all columns after these first 4 are custom (related to a table shown below the plot, col headers are the table row labels)
-    df_waterfall_data = df_waterfall_data.sort_values('Best response percent change', ascending = False)
+    df_waterfall_data = df_waterfall_data.sort_values('Percent change', ascending = False)
     return df_waterfall_data
 
 def parse_df_spider(df_spider_data):

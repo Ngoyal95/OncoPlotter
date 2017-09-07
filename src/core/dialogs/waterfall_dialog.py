@@ -32,8 +32,7 @@ from core.gui.custom_widgets import ColorButton, Combo_Events, Combo_Keys_and_Co
 
 class Waterfall(QWidget, waterfall.Ui_Waterfall):
     
-    plot_settings_signal = QtCore.pyqtSignal(list) #send list of plotting params
-    updated_keys_and_colors_signal = QtCore.pyqtSignal(dict) #send updated keys_and_colors dict (stored in this widget's self.keys_and_colors variable)
+    plot_signal = QtCore.pyqtSignal(list) #send list of plotting params
 
     def __init__(self, parent):
         super(Waterfall,self).__init__(parent)
@@ -51,53 +50,78 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.color_btn_container.addWidget(self.btn_get_color)
 
         #Button functions
-        self.btn_apply_general_settings.clicked.connect(self.update_keys_and_colors) #apply general settings, update keys/colors, and replot
+        self.btn_plot.clicked.connect(self.send_plot_signal) #apply general settings, update keys/colors, and replot
         self.btn_add_key.clicked.connect(self.add_key_to_list)
-        self.btn_default_settings.clicked.connect(self.default_keys_and_colors)
+        self.btn_default_settings.clicked.connect(self.set_default_keys_and_colors)
 
     #### Initialization functions ####
     def initialize_settings(self):
         '''
         Load stored settings for keys and colors
         '''
-        with shelve.open('WaterfallSettings') as shelfFile: 
+        with shelve.open('WaterfallSettings') as shelfFile:
+            self.default_keys_and_colors = shelfFile['UserSettings']
             self.keys_and_colors = shelfFile['UserSettings']
             shelfFile.close()
 
     #### Signal functions ####
     def on_waterfall_data_signal(self,signal):
         self.waterfall_data = signal['waterfall_data'] #pandas dataframe
-        
-    def on_generated_rectangles_signal(self,signal):
-        self.rectangles_received = signal[0]
-        self.keys_received = signal[1]
-        self.add_items() #display in table
-        self.btn_apply_general_settings.setEnabled(True)
-        self.btn_finalize_plot.setEnabled(True)
+        self.bar_heights = self.waterfall_data['Percent change']
+        self.bar_locations = np.arange(len(self.waterfall_data['Percent change']))        
+        self.responses = self.waterfall_data['Overall response']
+        self.keys = self.responses #initially, assume color coding according to response type, but change keys if diff color coding
+        self.default_labels = self.waterfall_data['Cancer'] #default label is the cancer type
+        self.labels = self.waterfall_data['Cancer']
+        self.btn_plot.setEnabled(True)
 
-    def send_settings(self):
+    def send_plot_signal(self):
         '''
         Emit both general plot settings, and color labeling settings. These are the settings to be used when the plot is created.
-        
         '''
-        self.general_settings = [
+        self.values = [
+                        self.bar_locations,
+                        self.bar_heights,
+                        self.keys, #custom key to override color coding
+                        self.responses, #patient response, used for standard color coding
+                        self.labels,
+                        self.waterfall_data
+        ]
+        self.settings = {
+                        'titles':[
                                 self.plot_title.text(),
                                 self.x_label.text(),
-                                self.y_label.text(),
-                                [self.twenty_percent_line.isChecked(),
+                                self.y_label.text()
+                        ],
+                        'lines':
+                        [
+                                self.twenty_percent_line.isChecked(),
+                                self.zero_percent_line.isChecked(),
                                 self.thirty_percent_line.isChecked(),
-                                self.zero_percent_line.isChecked()],
-                                [self.display_responses_as_text.isChecked(),
+                                self.show_grid.isChecked()
+                        ],
+                        'labels':[
+                                self.display_responses_as_text.isChecked(),
                                 self.display_responses_as_color.isChecked(),
-                                self.use_custom_keys.isChecked()],
-                                self.include_table.isChecked(),
-                                self.show_cancer_type.isChecked(),
-                                self.get_updated_color_coding(),
+                                self.use_custom_keys.isChecked(),
+                                self.show_cancer_type.isChecked()
+                        ],
+                        'general':[
+                                self.spin_fontsize.value(),
                                 self.outline_bars.isChecked(),
-                                self.spin_fontsize.value()
-                                ]
-        self.updated_keys_and_colors_signal.emit(self.keys_and_colors) #update the self.keys_and_colors variable in the plot widget
-        self.plot_settings_signal.emit([self.keys_and_colors, self.general_settings])
+                                self.show_legend.isChecked(),
+                                self.include_table.isChecked(),
+                                self.y_tick_interval.value()
+                        ]
+        }
+        self.keys_colors = [
+                        self.keys_and_colors
+        ]
+        self.plot_signal.emit([
+                            self.values,
+                            self.settings,
+                            self.keys_colors
+        ])
 
     #### Patient tree viewer related functions ####
     def create_patient_tree(self):
@@ -127,19 +151,19 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         '''
         self.tree.clear() #clear prior to entering items, prevent aggregation
         i=0
-        for rect in self.rectangles_received:
+        for bar in self.bar_heights:
             #populate editable tree with rect data
             self.rect_item = QTreeWidgetItem(self.root)
             self.rect_params = [
                                 self.waterfall_data['Patient number'][i], 
-                                rect.get_height(),
+                                self.bar_heights[i],
                                 self.waterfall_data['Overall response'][i],
                                 self.waterfall_data['Cancer'][i]
                                 ]
             for col in range(0,4):
                 self.rect_item.setText(col,str(self.rect_params[col]))
                 self.rect_item.setTextAlignment(col,4)
-            self.tree.setItemWidget(self.rect_item, 4, Combo_Events(self,self.keys_and_colors,self.keys_received[i])) #send the label of the rectangle as the key to determine color
+            self.tree.setItemWidget(self.rect_item, 4, Combo_Events(self,self.keys_and_colors,self.patient_response[i])) #send the label of the rectangle as the key to determine color
             self.rect_item.setFlags(self.rect_item.flags() | QtCore.Qt.ItemIsEditable)
             i+=1
 
@@ -212,7 +236,7 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         self.update_tree() #note, we update tree after sending settings so that the tree now reflects any changes in key/color changes in dropdowns
         #if we do update_tree() before sending, the tree will not properly reflect changes in dropdowns, and changes in key will not appear in plot
 
-    def default_keys_and_colors(self):
+    def set_default_keys_and_colors(self):
         '''
         Return the default keys (CR,PR,PD,SD) to their original colors
         '''
@@ -233,139 +257,102 @@ class Waterfall(QWidget, waterfall.Ui_Waterfall):
         return [self.tree.itemWidget(self.root.child(i),4).currentText() for i in range(child_count)]
 
 class WaterfallPlotter(QWidget):
-
-    generated_rectangles_signal = QtCore.pyqtSignal(list) #send list of rects for data display in tree
-
     def __init__(self,parent):
         super(WaterfallPlotter,self).__init__(parent)
         
-        #initialize
-        self.initialize_settings()
-        self.settings_update = False
-
         #create plotting widget
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas,self)
-        self.btn_plot = QPushButton('Create Default Plot (RESET)')
-        self.btn_plot.clicked.connect(self.default_plot)
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.toolbar)
         self.layout.addWidget(self.canvas)
-        self.layout.addWidget(self.btn_plot)
         self.setLayout(self.layout)
     
-    #### Initialization functions ####
-    def initialize_settings(self):
-        '''
-        Load stored settings for keys and colors
-        '''
-        with shelve.open('WaterfallSettings') as shelfFile: 
-            self.keys_and_colors = shelfFile['UserSettings']
-            shelfFile.close()
-
     #### Signal functions ####
-    def on_updated_keys_and_colors(self,signal):
-        self.keys_and_colors = signal #update self.keys_and_colors with the new values from Waterfall widget
-
-    def on_waterfall_data_signal(self,signal):
-        self.waterfall_data = signal['waterfall_data'] #pandas dataframe
-        self.btn_plot.setEnabled(True)
-
-    def on_general_settings_signal(self,signal):
-        self.keys_and_colors = signal[0] #update self.keys_and_colors with the new values from Waterfall widget
-        self.gen_settings = signal[1]
-        self.settings_update = True
+    def on_plot_signal(self,signal):
+        '''
+        signal[0] is plot data, signal[1] is plot formatting data, and signal[2] is keys,markers,and colors data
+        '''
+        self.plot_data = signal[0]
+        self.formatting_data = signal[1]
+        self.indicators = signal[2]
+        self.extract_plot_data(self.plot_data)
+        self.extract_formatting_data(self.formatting_data)
+        self.extract_indicators(self.indicators)
         self.plot()
     
-    #### Plotting functions ####
-    def default_plot(self):
-        self.settings_update = False
-        self.plot()
+    #### Plot data extraction functions and plot ####
+    def extract_plot_data(self,data):
+        '''
+         Pull out plotting data (bar locations, bar lengths, responses
+        '''
+        self.bar_locations = data[0]
+        self.bar_heights = data[1]
+        self.keys = data[2]
+        self.responses = data[3]
+        self.labels = data[4]
+        self.waterfall_data = data[5]
+
+    def extract_formatting_data(self,data):
+        '''
+        Pull out formatting data (titles, fontsize, markersize, show grid/lines or not, etc..)
+        '''
+        self.titles = data['titles']
+        self.line_settings = data['lines']
+        self.label_settings = data['labels']
+        self.general_settings = data['general']
+
+    def extract_indicators(self,data):
+        '''
+        Get formatting info (keys and colors info)
+        '''
+        self.keys_and_colors = data[0]
 
     def plot(self):
         '''
         Plot waterfall data
-        '''            
+        '''
+        self.bar_width = 0.9
         self.figure.clear()
-        self.rect_locations = np.arange(len(self.waterfall_data['Best response percent change']))
         self.ax = self.figure.add_subplot(111)
         self.patches = []
-        self.bar_labels = self.waterfall_data['Overall response']
-        
-        if self.settings_update == False:
-            self.ax.tick_params(
-                            axis='x',          # changes apply to the x-axis
-                            which='both',      # both major and minor ticks are affected
-                            bottom='on',      # ticks along the bottom edge are off
-                            top='on',         # ticks along the top edge are off
-                            labelbottom='on'
-                            ) # labels along the bottom edge are off
-            self.ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0, label='twenty_percent')
-            self.ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, lw=2.0, label='thirty_percent')
-            self.ax.axhline(y=0, c='k', alpha=1, lw=2.0, label='zero_percent')
-            self.ax.grid(color = 'k', axis = 'y', alpha=0.25)
-            used_keys = list(set(self.waterfall_data['Overall response']))
-            self.bar_colors = self.get_bar_colors(self.waterfall_data['Overall response'])
-            self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.waterfall_data['Overall response'])
-            for key in used_keys:
-                self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
+        self.ax.legend([])
+        self.edge_color = 'k'
+
+        self.bar_colors = self.get_bar_colors(self.keys)
+        self.ax.set_title(self.titles[0], fontsize=self.general_settings[0])
+        self.ax.set_xlabel(self.titles[1], fontsize=self.general_settings[0])
+        self.ax.set_ylabel(self.titles[2], fontsize=self.general_settings[0])
+
+        self.ax.axhline(y=20, linestyle='--', c='k', alpha=self.line_settings[0]/2.0, lw=2.0, label='twenty_percent')
+        self.ax.axhline(y=0, c='k', alpha=self.line_settings[1], lw=2.0, label='zero_percent')
+        self.ax.axhline(y=-30, linestyle='--', c='k', alpha=self.line_settings[2]/2.0, lw=2.0, label='thirty_percent')
+        self.ax.grid(color = 'k', axis = 'y', alpha=self.line_settings[3]/4.0)
+      
+        if ~self.general_settings[1]:
+            self.edge_color = ''
+        if self.general_settings[2]:
             self.ax.legend(handles=self.patches)
-        else:
-            edge_color = None
-            self.ax.legend([])
-            self.fontsize = self.gen_settings[8]
-            #settings were updated, we received them and stored in variable self.gen_settings
-            self.ax.set_title(self.gen_settings[0], fontsize=self.fontsize)
-            self.ax.set_xlabel(self.gen_settings[1], fontsize=self.fontsize)
-            self.ax.set_ylabel(self.gen_settings[2], fontsize=self.fontsize)
-            
-            if self.gen_settings[8]:
-                edge_color = 'k'
+        if self.general_settings[3]:
+            self.plot_table()
 
-            if self.gen_settings[3][0]:
-                self.ax.axhline(y=20, linestyle='--', c='k', alpha=0.5, lw=2.0, label='twenty_percent')
-            if self.gen_settings[3][1]:
-                self.ax.axhline(y=-30, linestyle='--', c='k', alpha=0.5, lw=2.0, label='thirty_percent')
-            if self.gen_settings[3][2]:
-                self.ax.axhline(y=0, c='k', alpha=1, lw=2.0, label='zero_percent')
+        #legend
+        if self.label_settings[1]: #show responses as colors
+            used_keys = list(set(self.responses))
+        elif self.label_settings[2]: #use custom keys
+            used_keys = list(set(self.keys))
+        for key in used_keys:
+            self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
 
-            if self.gen_settings[4][1]:
-                #color bars with response type
-                used_keys = list(set(self.waterfall_data['Overall response']))
-                self.bar_colors = self.get_bar_colors(self.waterfall_data['Overall response'])
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.waterfall_data['Overall response'], edgecolor=edge_color)
-                for key in used_keys:
-                    self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
-                self.ax.legend(handles=self.patches)
-            elif self.gen_settings[4][2]:
-                #response not shown as color coding, custom color code the bars
-                self.bar_labels = self.gen_settings[7]
-                self.bar_colors = self.get_bar_colors(self.gen_settings[7])
-                used_keys = list(set(self.gen_settings[7]))
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], color=self.bar_colors, label=self.gen_settings[7], edgecolor=edge_color)
-                for key in used_keys:
-                    self.patches.append(mpatches.Patch(color = self.keys_and_colors[key],label=key))
-                self.ax.legend(handles=self.patches)
-            else:
-                self.rects = self.ax.bar(self.rect_locations, self.waterfall_data['Best response percent change'], label=self.waterfall_data['Overall response'], edgecolor=edge_color)
-            
-            if self.gen_settings[4][0]:
-                #show responses as labels, default color bars
-                #legend depends on user specified keys
-                self.add_labels(self.ax, self.rects, self.waterfall_data, 1)
+        self.rects = self.ax.bar(left=self.bar_locations, height=self.bar_heights, color=self.bar_colors)
 
-            #add table
-            if self.gen_settings[5]:
-                self.plot_table()
-            
-            #add labeling (response type or cancer type)
-            if self.gen_settings[6] and ~self.gen_settings[4][0]:
-                self.add_labels(self.ax, self.rects, self.waterfall_data, 0)
-            
-        self.ax.grid(color = 'k', axis = 'y', alpha=0.25)
+        if self.label_settings[0]: #show responses as text
+            self.add_labels(self.ax, self.rects, self.responses, 1)
+        if self.label_settings[3]: #show custom label (default is cancer type)
+            self.add_labels(self.ax, self.rects, self.labels, 0)
+                    
         self.canvas.draw()
-        self.generated_rectangles_signal.emit([self.rects, self.bar_labels])
             
     def plot_table(self):
         rows = ['%s' % x for x in self.waterfall_data.keys()]
@@ -388,7 +375,7 @@ class WaterfallPlotter(QWidget):
                         labelbottom='off'
                         ) # labels along the bottom edge are off
                         
-    def add_labels(self, ax, rects, waterfall_data, label_type):
+    def add_labels(self, ax, rects, labels, label_type):
         '''
         Add labels above/below bars. label_type == 1 --> display responses; == 0 --> display cancer type
         '''
@@ -404,7 +391,7 @@ class WaterfallPlotter(QWidget):
                     valign = 'top'
                     
                 ax.text(rect.get_x() + rect.get_width()/2., hgt,
-                        '%s' % waterfall_data['Overall response'][i], ha='center', va=valign)
+                        '%s' % labels[i], ha='center', va=valign)
                 i+=1
         else:
             for rect in rects:
@@ -417,7 +404,7 @@ class WaterfallPlotter(QWidget):
                     hgt = 1
 
                 ax.text(rect.get_x() + rect.get_width()/2., hgt,
-                        '%s' % waterfall_data['Cancer'][i], ha='center', va=valign, rotation='vertical')
+                        '%s' % labels[i], ha='center', va=valign, rotation='vertical')
                 i+=1   
 
     #### Miscellaneous functions ####
